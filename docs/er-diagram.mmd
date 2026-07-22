@@ -1,0 +1,119 @@
+erDiagram
+    CLINIC ||--o{ USER : employs
+    CLINIC ||--o{ PATIENT : registers
+    CLINIC ||--o{ CLAIM : owns
+
+    USER ||--o{ CLAIM : "created by (billing staff)"
+    USER ||--o{ CLAIM_DOCTOR : "reviews (doctor)"
+
+    PATIENT ||--o{ CLAIM : "is subject of"
+
+    INSURER ||--o{ CLAIM : "receives"
+
+    CLAIM ||--o{ CLAIM_DOCTOR : "involves"
+    CLAIM ||--o{ CLAIM_DIAGNOSIS_CODE : "has"
+    CLAIM ||--o{ CLAIM_PROCEDURE_CODE : "has"
+    CLAIM ||--o{ CLAIM_RISK_FLAG : "triggers"
+
+    DIAGNOSIS_CODE ||--o{ CLAIM_DIAGNOSIS_CODE : "referenced in"
+    PROCEDURE_CODE ||--o{ CLAIM_PROCEDURE_CODE : "referenced in"
+
+    DENIAL_RULE ||--o{ CLAIM_RISK_FLAG : "generates"
+
+    CLINIC {
+        bigint id PK
+        varchar name
+        varchar address
+        datetime created_at
+    }
+
+    USER {
+        bigint id PK
+        bigint clinic_id FK
+        varchar username
+        varchar password_hash
+        varchar email
+        varchar role "ADMIN, DOCTOR, BILLING_STAFF"
+        datetime created_at
+    }
+
+    PATIENT {
+        bigint id PK
+        bigint clinic_id FK
+        varchar first_name
+        varchar last_name
+        date date_of_birth
+        varchar gender
+        varchar contact_info
+    }
+
+    INSURER {
+        bigint id PK
+        varchar name
+        text rules_notes
+    }
+
+    DIAGNOSIS_CODE {
+        bigint id PK
+        varchar code "e.g. J20.9"
+        varchar description
+        varchar category
+    }
+
+    PROCEDURE_CODE {
+        bigint id PK
+        varchar code "e.g. 99213"
+        varchar description
+        varchar category
+    }
+
+    CLAIM {
+        bigint id PK
+        bigint clinic_id FK
+        bigint patient_id FK
+        bigint insurer_id FK
+        bigint created_by_user_id FK
+        date date_of_service
+        varchar status "DRAFT, CHECKED_CLEAN, CHECKED_FLAGGED, SUBMITTED, DENIED, APPROVED"
+        int risk_score
+        datetime created_at
+        datetime updated_at
+    }
+
+    CLAIM_DOCTOR {
+        bigint id PK
+        bigint claim_id FK
+        bigint doctor_id FK
+        boolean confirmed
+    }
+
+    CLAIM_DIAGNOSIS_CODE {
+        bigint id PK
+        bigint claim_id FK
+        bigint diagnosis_code_id FK
+    }
+
+    CLAIM_PROCEDURE_CODE {
+        bigint id PK
+        bigint claim_id FK
+        bigint procedure_code_id FK
+        varchar modifier "e.g. 25, 59"
+    }
+
+    DENIAL_RULE {
+        bigint id PK
+        varchar rule_name
+        varchar condition_type "MISSING_FIELD, CODE_MISMATCH, INSURER_SPECIFIC, MISSING_MODIFIER"
+        json condition_logic
+        varchar severity "LOW, MEDIUM, HIGH"
+        varchar message
+        boolean active
+    }
+
+    CLAIM_RISK_FLAG {
+        bigint id PK
+        bigint claim_id FK
+        bigint denial_rule_id FK
+        varchar triggered_message
+        datetime created_at
+    }

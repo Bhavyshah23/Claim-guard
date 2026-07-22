@@ -1,0 +1,83 @@
+Clinic
+ ├── id (PK)
+ ├── name
+ ├── address
+ └── created_at
+
+User
+ ├── id (PK)
+ ├── clinic_id (FK → Clinic)
+ ├── username
+ ├── password (hashed)
+ ├── email
+ ├── role (ENUM: ADMIN, DOCTOR, BILLING_STAFF)
+ └── created_at
+
+Patient
+ ├── id (PK)
+ ├── clinic_id (FK → Clinic)
+ ├── first_name, last_name
+ ├── date_of_birth
+ ├── gender
+ └── contact_info
+
+Insurer
+ ├── id (PK)
+ ├── name
+ └── insurer_specific_rules_notes
+
+DiagnosisCode (reference table)
+ ├── id (PK)
+ ├── code (e.g., "J20.9")
+ ├── description
+ └── category
+
+ProcedureCode (reference table)
+ ├── id (PK)
+ ├── code (e.g., "99213")
+ ├── description
+ └── category
+
+Claim
+ ├── id (PK)
+ ├── clinic_id (FK → Clinic)
+ ├── patient_id (FK → Patient)
+ ├── insurer_id (FK → Insurer)
+ ├── created_by_user_id (FK → User, billing staff who entered it)
+ ├── date_of_service
+ ├── status (ENUM: DRAFT, CHECKED_CLEAN, CHECKED_FLAGGED, SUBMITTED, DENIED, APPROVED)
+ ├── risk_score
+ └── created_at, updated_at
+
+ClaimDoctor (join table — supports multiple doctors per claim)
+ ├── id (PK)
+ ├── claim_id (FK → Claim)
+ ├── doctor_id (FK → User, where role=DOCTOR)
+ └── confirmed (boolean — has this doctor reviewed/confirmed their part?)
+
+ClaimDiagnosisCode (join table)
+ ├── id (PK)
+ ├── claim_id (FK → Claim)
+ └── diagnosis_code_id (FK → DiagnosisCode)
+
+ClaimProcedureCode (join table)
+ ├── id (PK)
+ ├── claim_id (FK → Claim)
+ ├── procedure_code_id (FK → ProcedureCode)
+ └── modifier (e.g., "25", "59" — optional CPT modifier)
+
+DenialRule
+ ├── id (PK)
+ ├── rule_name
+ ├── condition_type (ENUM: MISSING_FIELD, CODE_MISMATCH, INSURER_SPECIFIC, MISSING_MODIFIER)
+ ├── condition_logic (JSON column — flexible rule parameters)
+ ├── severity (ENUM: LOW, MEDIUM, HIGH)
+ ├── message (human-readable explanation shown to staff)
+ └── active (boolean)
+
+ClaimRiskFlag
+ ├── id (PK)
+ ├── claim_id (FK → Claim)
+ ├── denial_rule_id (FK → DenialRule)
+ ├── triggered_message
+ └── created_at
