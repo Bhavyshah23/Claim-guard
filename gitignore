@@ -1,0 +1,71 @@
+### ==========================
+### Spring Boot / Java Backend
+### ==========================
+claimguard-backend/target/
+claimguard-backend/.mvn/wrapper/maven-wrapper.jar
+claimguard-backend/!**/src/main/**/target/
+claimguard-backend/!**/src/test/**/target/
+
+### STS ###
+claimguard-backend/.apt_generated
+claimguard-backend/.classpath
+claimguard-backend/.factorypath
+claimguard-backend/.project
+claimguard-backend/.settings
+claimguard-backend/.springBeans
+claimguard-backend/.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+claimguard-backend/nbproject/private/
+claimguard-backend/build/
+claimguard-backend/nbbuild/
+claimguard-backend/dist/
+claimguard-backend/nbdist/
+claimguard-backend/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Environment / Secrets (CRITICAL - never commit DB passwords/API keys) ###
+**/application-local.properties
+**/application-secrets.properties
+*.env
+.env
+.env.local
+
+### ==========================
+### React Frontend
+### ==========================
+claimguard-client/node_modules/
+claimguard-client/build/
+claimguard-client/dist/
+claimguard-client/.env
+claimguard-client/.env.local
+claimguard-client/.env.development.local
+claimguard-client/.env.test.local
+claimguard-client/.env.production.local
+claimguard-client/npm-debug.log*
+claimguard-client/yarn-debug.log*
+claimguard-client/yarn-error.log*
+claimguard-client/.pnp
+claimguard-client/.pnp.js
+claimguard-client/coverage/
+
+### ==========================
+### OS-level junk
+### ==========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+### ==========================
+### Logs
+### ==========================
+*.log
+logs/
