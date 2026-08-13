@@ -37,4 +37,12 @@ public class ClaimController {
     public ResponseEntity<ClaimResponse> createClaim(@Valid @RequestBody ClaimRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(claimService.createClaim(request));
     }
+
+    // Runs the rules engine against this claim. Callable repeatedly -
+    // e.g. billing staff fixes a flagged issue, then re-checks to confirm it's clean.
+    @PostMapping("/{id}/check")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BILLING_STAFF')")
+    public ResponseEntity<ClaimResponse> checkClaim(@PathVariable Long id) {
+        return ResponseEntity.ok(claimService.checkClaim(id));
+    }
 }

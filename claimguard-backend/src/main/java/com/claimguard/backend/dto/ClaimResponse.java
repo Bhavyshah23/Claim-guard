@@ -31,6 +31,7 @@ public class ClaimResponse {
     private List<DoctorSummary> doctors;
     private List<CodeResponse> diagnosisCodes;
     private List<ProcedureCodeSummary> procedureCodes;
+    private List<RiskFlagResponse> riskFlags;
 
     @Data
     @NoArgsConstructor

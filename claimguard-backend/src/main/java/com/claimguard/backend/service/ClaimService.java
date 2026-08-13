@@ -21,6 +21,9 @@ public class ClaimService {
     private final UserRepository userRepository;
     private final DiagnosisCodeRepository diagnosisCodeRepository;
     private final ProcedureCodeRepository procedureCodeRepository;
+    private final DenialRuleRepository denialRuleRepository;
+    private final RuleEngineService ruleEngineService;
+    private final RiskScoreCalculator riskScoreCalculator;
     private final CurrentUserProvider currentUserProvider;
 
     // @Transactional matters a lot here: a claim touches 5+ tables at once
@@ -75,6 +78,30 @@ public class ClaimService {
 
     public ClaimResponse getClaimById(Long id) {
         Claim claim = getClaimScoped(id);
+        return toResponse(claim);
+    }
+
+    // Runs the rules engine against a claim, saves the triggered flags,
+    // and updates the claim's status and risk score accordingly.
+    // Safe to call multiple times (e.g. after billing staff fixes an issue and
+    // re-checks) - old flags are cleared and replaced with fresh results each time.
+    @Transactional
+    public ClaimResponse checkClaim(Long id) {
+        Claim claim = getClaimScoped(id);
+
+        List<DenialRule> activeRules = denialRuleRepository.findByActiveTrue();
+        List<ClaimRiskFlag> triggeredFlags = ruleEngineService.evaluate(claim, activeRules);
+
+        // orphanRemoval=true on Claim.riskFlags means clearing this list
+        // deletes the old ClaimRiskFlag rows from the database automatically
+        claim.getRiskFlags().clear();
+        claim.getRiskFlags().addAll(triggeredFlags);
+
+        int riskScore = riskScoreCalculator.calculate(triggeredFlags);
+        claim.setRiskScore(riskScore);
+        claim.setStatus(triggeredFlags.isEmpty() ? ClaimStatus.CHECKED_CLEAN : ClaimStatus.CHECKED_FLAGGED);
+
+        claim = claimRepository.save(claim);
         return toResponse(claim);
     }
 
@@ -168,6 +195,15 @@ public class ClaimService {
                         .build())
                 .toList();
 
+        List<RiskFlagResponse> riskFlags = claim.getRiskFlags().stream()
+                .map(rf -> RiskFlagResponse.builder()
+                        .id(rf.getId())
+                        .ruleName(rf.getDenialRule().getRuleName())
+                        .severity(rf.getDenialRule().getSeverity())
+                        .message(rf.getTriggeredMessage())
+                        .build())
+                .toList();
+
         return ClaimResponse.builder()
                 .id(claim.getId())
                 .patientName(claim.getPatient().getFirstName() + " " + claim.getPatient().getLastName())
@@ -183,6 +219,7 @@ public class ClaimService {
                 .doctors(doctors)
                 .diagnosisCodes(diagnosisCodes)
                 .procedureCodes(procedureCodes)
+                .riskFlags(riskFlags)
                 .build();
     }
 }
