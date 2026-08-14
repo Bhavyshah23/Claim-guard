@@ -45,4 +45,13 @@ public class ClaimController {
     public ResponseEntity<ClaimResponse> checkClaim(@PathVariable Long id) {
         return ResponseEntity.ok(claimService.checkClaim(id));
     }
+
+    // Only a Doctor can confirm - and only their OWN assignment on the claim
+    // (enforced inside the service, since a doctor confirms based on their
+    // own JWT identity, not a doctorId passed in the request)
+    @PutMapping("/{id}/confirm")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<ClaimResponse> confirmClaim(@PathVariable Long id) {
+        return ResponseEntity.ok(claimService.confirmClaim(id));
+    }
 }

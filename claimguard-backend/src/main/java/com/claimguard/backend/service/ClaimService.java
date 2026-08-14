@@ -22,6 +22,7 @@ public class ClaimService {
     private final DiagnosisCodeRepository diagnosisCodeRepository;
     private final ProcedureCodeRepository procedureCodeRepository;
     private final DenialRuleRepository denialRuleRepository;
+    private final ClaimDoctorRepository claimDoctorRepository;
     private final RuleEngineService ruleEngineService;
     private final RiskScoreCalculator riskScoreCalculator;
     private final CurrentUserProvider currentUserProvider;
@@ -102,6 +103,28 @@ public class ClaimService {
         claim.setStatus(triggeredFlags.isEmpty() ? ClaimStatus.CHECKED_CLEAN : ClaimStatus.CHECKED_FLAGGED);
 
         claim = claimRepository.save(claim);
+        return toResponse(claim);
+    }
+
+    // Lets the CURRENTLY LOGGED-IN doctor confirm their part of a claim.
+    // Deliberately does not take a doctorId parameter - the doctor can only
+    // confirm on their own behalf, identified via the JWT, not by request body.
+    // This prevents one doctor from confirming on another doctor's behalf.
+    @Transactional
+    public ClaimResponse confirmClaim(Long claimId) {
+        Claim claim = getClaimScoped(claimId);
+        Long currentUserId = currentUserProvider.getCurrentUserId();
+
+        ClaimDoctor claimDoctor = claimDoctorRepository.findByClaimIdAndDoctorId(claimId, currentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "You are not assigned as a doctor on this claim"));
+
+        claimDoctor.setConfirmed(true);
+        claimDoctorRepository.save(claimDoctor);
+
+        // Re-fetch so the response reflects the updated confirmation status
+        claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new ResourceNotFoundException("Claim not found with id: " + claimId));
         return toResponse(claim);
     }
 
