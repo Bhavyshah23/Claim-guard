@@ -10,6 +10,7 @@ import WorkspacePlaceholder from './pages/workspace/WorkspacePlaceholder';
 import NewClaimPage from './pages/billing/NewClaimPage';
 import MyClaimsPage from './pages/doctor/MyClaimsPage';
 import StaffManagementPage from './pages/admin/StaffManagementPage';
+import DashboardPage from './pages/admin/DashboardPage';
 import theme from './theme';
 
 const ROLE_HOMES = {
@@ -49,13 +50,7 @@ export default function App() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route
             path="dashboard"
-            element={
-              <WorkspacePlaceholder
-                title="Dashboard"
-                subtitle="Overview of clinic claim activity."
-                description="Your clinic's claim performance dashboard will live here."
-              />
-            }
+            element={<DashboardPage />}
           />
           <Route
             path="claims"
