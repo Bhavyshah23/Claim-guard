@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PlaceholderPage from './pages/PlaceholderPage';
 import WorkspacePlaceholder from './pages/workspace/WorkspacePlaceholder';
+import NewClaimPage from './pages/billing/NewClaimPage';
 import theme from './theme';
 
 const ROLE_HOMES = {
@@ -124,16 +125,7 @@ export default function App() {
           }
         >
           <Route index element={<Navigate to="new-claim" replace />} />
-          <Route
-            path="new-claim"
-            element={
-              <WorkspacePlaceholder
-                title="New Claim"
-                subtitle="Draft and submit a new insurance claim."
-                description="The claim intake form will live here."
-              />
-            }
-          />
+          <Route path="new-claim" element={<NewClaimPage />} />
           <Route
             path="claims"
             element={

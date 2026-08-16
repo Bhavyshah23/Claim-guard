@@ -12,18 +12,18 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// Every endpoint here is Admin-only - this is how a clinic's Admin builds out
-// their team of Doctors and Billing Staff, replacing the manual SQL inserts
-// we used earlier just to unblock testing.
+// Read access (viewing staff list) is open to any authenticated clinic user -
+// Billing Staff needs this to select a Doctor when creating a claim. Only
+// creating/managing staff accounts stays restricted to Admin.
 @RestController
 @RequestMapping("/api/admin/staff")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
 public class StaffController {
 
     private final StaffService staffService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<StaffResponse> createStaff(@Valid @RequestBody CreateStaffRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(staffService.createStaff(request));
     }
