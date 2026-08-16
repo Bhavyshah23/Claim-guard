@@ -8,6 +8,7 @@ import RegisterPage from './pages/RegisterPage';
 import PlaceholderPage from './pages/PlaceholderPage';
 import WorkspacePlaceholder from './pages/workspace/WorkspacePlaceholder';
 import NewClaimPage from './pages/billing/NewClaimPage';
+import MyClaimsPage from './pages/doctor/MyClaimsPage';
 import theme from './theme';
 
 const ROLE_HOMES = {
@@ -95,16 +96,7 @@ export default function App() {
           }
         >
           <Route index element={<Navigate to="my-claims" replace />} />
-          <Route
-            path="my-claims"
-            element={
-              <WorkspacePlaceholder
-                title="My Claims"
-                subtitle="Claims awaiting your clinical sign-off."
-                description="Claims assigned to you will appear here."
-              />
-            }
-          />
+          <Route path="my-claims" element={<MyClaimsPage />} />
           <Route
             path="claims"
             element={

@@ -31,3 +31,12 @@ export function createClaim(payload) {
 export function checkClaim(claimId) {
   return axiosInstance.post(`/api/claims/${claimId}/check`).then(toData);
 }
+
+export function fetchClaims() {
+  return axiosInstance.get('/api/claims').then(toData);
+}
+
+// Confirms the currently logged-in doctor's entry on the claim.
+export function confirmClaim(claimId) {
+  return axiosInstance.put(`/api/claims/${claimId}/confirm`).then(toData);
+}
