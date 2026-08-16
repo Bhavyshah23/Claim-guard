@@ -1,10 +1,12 @@
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import AppShell from './components/layout/AppShell';
 import { useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PlaceholderPage from './pages/PlaceholderPage';
+import WorkspacePlaceholder from './pages/workspace/WorkspacePlaceholder';
 import theme from './theme';
 
 const ROLE_HOMES = {
@@ -34,38 +36,115 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
 
         <Route
-          path="/admin/*"
+          path="/admin"
           element={
             <ProtectedRoute allowedRoles={['ADMIN']}>
-              <PlaceholderPage
-                title="Admin console"
-                description="Clinic, staff and reference-data management will live here."
-              />
+              <AppShell />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route
+            path="dashboard"
+            element={
+              <WorkspacePlaceholder
+                title="Dashboard"
+                subtitle="Overview of clinic claim activity."
+                description="Your clinic's claim performance dashboard will live here."
+              />
+            }
+          />
+          <Route
+            path="claims"
+            element={
+              <WorkspacePlaceholder
+                title="Claims"
+                subtitle="Review, screen and manage all clinic claims."
+                description="Clinic-wide claim management tools will live here."
+              />
+            }
+          />
+          <Route
+            path="staff"
+            element={
+              <WorkspacePlaceholder
+                title="Staff Management"
+                subtitle="Manage clinic staff and their roles."
+                description="Staff and role management tools will live here."
+              />
+            }
+          />
+          <Route
+            path="rules"
+            element={
+              <WorkspacePlaceholder
+                title="Rule Configuration"
+                subtitle="Configure claim screening rules."
+                description="Rule configuration tools will live here."
+              />
+            }
+          />
+        </Route>
         <Route
-          path="/doctor/*"
+          path="/doctor"
           element={
             <ProtectedRoute allowedRoles={['DOCTOR']}>
-              <PlaceholderPage
-                title="Doctor workspace"
-                description="Review and confirm clinical details for claims awaiting your sign-off."
-              />
+              <AppShell />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<Navigate to="my-claims" replace />} />
+          <Route
+            path="my-claims"
+            element={
+              <WorkspacePlaceholder
+                title="My Claims"
+                subtitle="Claims awaiting your clinical sign-off."
+                description="Claims assigned to you will appear here."
+              />
+            }
+          />
+          <Route
+            path="claims"
+            element={
+              <WorkspacePlaceholder
+                title="All Claims"
+                subtitle="All claims across the clinic."
+                description="Every clinic claim will be listed here."
+              />
+            }
+          />
+        </Route>
         <Route
-          path="/billing/*"
+          path="/billing"
           element={
             <ProtectedRoute allowedRoles={['BILLING_STAFF']}>
-              <PlaceholderPage
-                title="Billing workspace"
-                description="Draft, screen and submit insurance claims."
-              />
+              <AppShell />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<Navigate to="new-claim" replace />} />
+          <Route
+            path="new-claim"
+            element={
+              <WorkspacePlaceholder
+                title="New Claim"
+                subtitle="Draft and submit a new insurance claim."
+                description="The claim intake form will live here."
+              />
+            }
+          />
+          <Route
+            path="claims"
+            element={
+              <WorkspacePlaceholder
+                title="All Claims"
+                subtitle="Manage and screen all clinic claims."
+                description="Billing and screening workflows will live here."
+              />
+            }
+          />
+        </Route>
 
         <Route
           path="/unauthorized"
