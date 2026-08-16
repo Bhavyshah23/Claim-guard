@@ -9,6 +9,7 @@ import PlaceholderPage from './pages/PlaceholderPage';
 import WorkspacePlaceholder from './pages/workspace/WorkspacePlaceholder';
 import NewClaimPage from './pages/billing/NewClaimPage';
 import MyClaimsPage from './pages/doctor/MyClaimsPage';
+import StaffManagementPage from './pages/admin/StaffManagementPage';
 import theme from './theme';
 
 const ROLE_HOMES = {
@@ -68,13 +69,7 @@ export default function App() {
           />
           <Route
             path="staff"
-            element={
-              <WorkspacePlaceholder
-                title="Staff Management"
-                subtitle="Manage clinic staff and their roles."
-                description="Staff and role management tools will live here."
-              />
-            }
+            element={<StaffManagementPage />}
           />
           <Route
             path="rules"

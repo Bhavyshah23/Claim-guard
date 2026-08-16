@@ -34,7 +34,18 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Only treat a 401 as session expiry when the backend did NOT return a
+    // business error body. AuthException responses carry a `message`
+    // (e.g. "Username is already taken") and must surface in the UI, not
+    // silently log the user out. A real expired/invalid JWT comes back as a
+    // bare 401 from Spring Security (no JSON body).
+    const data = error.response?.data;
+    const hasBusinessBody =
+      Boolean(data) &&
+      (typeof data.message === 'string' ||
+        (data.errors && typeof data.errors === 'object'));
+
+    if (error.response?.status === 401 && !hasBusinessBody) {
       localStorage.removeItem(AUTH_STORAGE_KEY);
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
