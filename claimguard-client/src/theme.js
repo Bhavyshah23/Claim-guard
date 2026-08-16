@@ -86,6 +86,7 @@ const theme = createTheme({
     MuiButton: {
       defaultProps: {
         disableElevation: true,
+        disableRipple: true,
       },
       styleOverrides: {
         root: {
@@ -231,6 +232,35 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderColor: colors.border,
+        },
+      },
+    },
+    MuiAlert: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          fontSize: 14,
+          fontWeight: 500,
+        },
+        standardError: {
+          backgroundColor: colors.severity.highBackground,
+          color: colors.severity.high,
+          '& .MuiAlert-icon': { color: colors.severity.high },
+        },
+        standardWarning: {
+          backgroundColor: colors.severity.mediumBackground,
+          color: colors.severity.medium,
+          '& .MuiAlert-icon': { color: colors.severity.medium },
+        },
+        standardSuccess: {
+          backgroundColor: colors.severity.successBackground,
+          color: colors.severity.success,
+          '& .MuiAlert-icon': { color: colors.severity.success },
+        },
+        standardInfo: {
+          backgroundColor: colors.severity.neutralBackground,
+          color: colors.severity.neutral,
+          '& .MuiAlert-icon': { color: colors.severity.neutral },
         },
       },
     },
