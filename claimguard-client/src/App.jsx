@@ -11,6 +11,7 @@ import NewClaimPage from './pages/billing/NewClaimPage';
 import MyClaimsPage from './pages/doctor/MyClaimsPage';
 import StaffManagementPage from './pages/admin/StaffManagementPage';
 import DashboardPage from './pages/admin/DashboardPage';
+import PatientManagementPage from './pages/patients/PatientManagementPage';
 import theme from './theme';
 
 const ROLE_HOMES = {
@@ -52,6 +53,7 @@ export default function App() {
             path="dashboard"
             element={<DashboardPage />}
           />
+          <Route path="patients" element={<PatientManagementPage />} />
           <Route
             path="claims"
             element={
@@ -87,6 +89,7 @@ export default function App() {
         >
           <Route index element={<Navigate to="my-claims" replace />} />
           <Route path="my-claims" element={<MyClaimsPage />} />
+          <Route path="patients" element={<PatientManagementPage />} />
           <Route
             path="claims"
             element={

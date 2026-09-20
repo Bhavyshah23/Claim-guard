@@ -1,10 +1,9 @@
 import axiosInstance from './axiosInstance';
+import { fetchPatients } from './patientsApi';
 
 const toData = (response) => response.data;
 
-export function fetchPatients() {
-  return axiosInstance.get('/api/patients').then(toData);
-}
+export { fetchPatients };
 
 export function fetchInsurers() {
   return axiosInstance.get('/api/insurers').then(toData);

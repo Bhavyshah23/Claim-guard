@@ -4,16 +4,19 @@ import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import RuleOutlined from '@mui/icons-material/RuleOutlined';
 import AssignmentIndOutlined from '@mui/icons-material/AssignmentIndOutlined';
 import AddCircleOutlined from '@mui/icons-material/AddCircleOutlined';
+import PeopleOutlined from '@mui/icons-material/PeopleOutlined';
 
 export const NAV_ITEMS = {
   ADMIN: [
     { label: 'Dashboard', path: '/admin/dashboard', icon: DashboardOutlined },
+    { label: 'Patients', path: '/admin/patients', icon: PeopleOutlined },
     { label: 'Claims', path: '/admin/claims', icon: AssignmentOutlined },
     { label: 'Staff Management', path: '/admin/staff', icon: GroupOutlined },
     { label: 'Rule Configuration', path: '/admin/rules', icon: RuleOutlined },
   ],
   DOCTOR: [
     { label: 'My Claims', path: '/doctor/my-claims', icon: AssignmentIndOutlined },
+    { label: 'Patients', path: '/doctor/patients', icon: PeopleOutlined },
     { label: 'All Claims', path: '/doctor/claims', icon: AssignmentOutlined },
   ],
   BILLING_STAFF: [

@@ -5,6 +5,7 @@ import com.claimguard.backend.dto.PatientResponse;
 import com.claimguard.backend.entity.Clinic;
 import com.claimguard.backend.entity.Patient;
 import com.claimguard.backend.exception.ResourceNotFoundException;
+import com.claimguard.backend.repository.ClaimRepository;
 import com.claimguard.backend.repository.ClinicRepository;
 import com.claimguard.backend.repository.PatientRepository;
 import com.claimguard.backend.security.CurrentUserProvider;
@@ -19,6 +20,7 @@ public class PatientService {
 
     private final PatientRepository patientRepository;
     private final ClinicRepository clinicRepository;
+    private final ClaimRepository claimRepository;
     private final CurrentUserProvider currentUserProvider;
 
     public PatientResponse createPatient(PatientRequest request) {
@@ -69,6 +71,10 @@ public class PatientService {
 
     public void deletePatient(Long id) {
         Patient patient = getPatientScoped(id);
+        if (claimRepository.existsByPatientId(id)) {
+            throw new IllegalArgumentException(
+                    "Cannot delete this patient — they have existing claims on record.");
+        }
         patientRepository.delete(patient);
     }
 
