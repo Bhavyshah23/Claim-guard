@@ -141,10 +141,18 @@ export default function ClaimDetailsForm({ lookups, lookupErrors, mode, busy, on
         </Alert>
       )}
 
+      {!lookupErrors.patients && patients.length === 0 && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          No patients are registered yet. Ask your clinic admin or a doctor to add patients under{' '}
+          <strong>Patients</strong> before you can create a claim.
+        </Alert>
+      )}
+
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <Autocomplete
             fullWidth
+            disabled={!lookupErrors.patients && patients.length === 0}
             options={patients}
             value={patient}
             onChange={(_event, value) => {

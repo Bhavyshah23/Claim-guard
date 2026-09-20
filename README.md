@@ -44,15 +44,15 @@ claimguard/
 
 | Role | Responsibilities |
 |---|---|
-| **Admin** | Manage clinic staff, configure denial rules, view analytics |
-| **Doctor** | Review and confirm diagnosis/procedure codes for their patients |
-| **Billing Staff** | Enter claims, run risk checks, fix flagged issues, track submission status |
+| **Admin** | Manage staff and patients, configure denial rules, view analytics |
+| **Doctor** | Register and update patients, review and confirm claims assigned to them |
+| **Billing Staff** | Enter claims (select existing patients), run risk checks, fix flagged issues |
 
 ---
 
 ## Core Workflow
 
-1. Billing staff enters a new claim (patient, diagnosis codes, procedure codes, insurer)
+1. Admin or doctor registers patients; billing staff enters a new claim (patient, diagnosis codes, procedure codes, insurer)
 2. The Rules Engine evaluates the claim against configurable denial-risk rules
 3. System returns a risk score with plain-English explanations for any flags
 4. Staff fixes flagged issues and re-checks until the claim is clean
