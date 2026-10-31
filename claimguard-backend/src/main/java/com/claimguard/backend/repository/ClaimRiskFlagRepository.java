@@ -10,4 +10,6 @@ import java.util.List;
 public interface ClaimRiskFlagRepository extends JpaRepository<ClaimRiskFlag, Long> {
 
     List<ClaimRiskFlag> findByClaimId(Long claimId);
+
+    boolean existsByDenialRuleId(Long denialRuleId);
 }

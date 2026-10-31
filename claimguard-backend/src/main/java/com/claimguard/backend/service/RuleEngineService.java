@@ -88,6 +88,9 @@ public class RuleEngineService {
         if ("doctorConfirmation".equals(field)) {
             return claim.getClaimDoctors().stream().noneMatch(ClaimDoctor::getConfirmed);
         }
+        if ("preAuthNumber".equals(field)) {
+            return claim.getPreAuthNumber() == null || claim.getPreAuthNumber().isBlank();
+        }
         return false;
     }
 }

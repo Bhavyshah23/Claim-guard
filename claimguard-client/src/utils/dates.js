@@ -12,7 +12,10 @@ export function todayISO() {
 
 export function formatDate(value) {
   if (!value) return '';
-  const date = typeof value === 'string' ? new Date(`${value}T00:00:00`) : new Date(value);
+  const date =
+    typeof value === 'string'
+      ? new Date(value.includes('T') ? value : `${value}T00:00:00`)
+      : new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }

@@ -6,7 +6,9 @@ import { useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PlaceholderPage from './pages/PlaceholderPage';
-import WorkspacePlaceholder from './pages/workspace/WorkspacePlaceholder';
+import ClaimsListPage from './pages/claims/ClaimsListPage';
+import ClaimDetailPage from './pages/claims/ClaimDetailPage';
+import RuleConfigurationPage from './pages/admin/RuleConfigurationPage';
 import NewClaimPage from './pages/billing/NewClaimPage';
 import MyClaimsPage from './pages/doctor/MyClaimsPage';
 import StaffManagementPage from './pages/admin/StaffManagementPage';
@@ -54,30 +56,13 @@ export default function App() {
             element={<DashboardPage />}
           />
           <Route path="patients" element={<PatientManagementPage />} />
-          <Route
-            path="claims"
-            element={
-              <WorkspacePlaceholder
-                title="Claims"
-                subtitle="Review, screen and manage all clinic claims."
-                description="Clinic-wide claim management tools will live here."
-              />
-            }
-          />
+          <Route path="claims" element={<ClaimsListPage />} />
+          <Route path="claims/:id" element={<ClaimDetailPage />} />
           <Route
             path="staff"
             element={<StaffManagementPage />}
           />
-          <Route
-            path="rules"
-            element={
-              <WorkspacePlaceholder
-                title="Rule Configuration"
-                subtitle="Configure claim screening rules."
-                description="Rule configuration tools will live here."
-              />
-            }
-          />
+          <Route path="rules" element={<RuleConfigurationPage />} />
         </Route>
         <Route
           path="/doctor"
@@ -90,16 +75,8 @@ export default function App() {
           <Route index element={<Navigate to="my-claims" replace />} />
           <Route path="my-claims" element={<MyClaimsPage />} />
           <Route path="patients" element={<PatientManagementPage />} />
-          <Route
-            path="claims"
-            element={
-              <WorkspacePlaceholder
-                title="All Claims"
-                subtitle="All claims across the clinic."
-                description="Every clinic claim will be listed here."
-              />
-            }
-          />
+          <Route path="claims" element={<ClaimsListPage />} />
+          <Route path="claims/:id" element={<ClaimDetailPage />} />
         </Route>
         <Route
           path="/billing"
@@ -111,16 +88,8 @@ export default function App() {
         >
           <Route index element={<Navigate to="new-claim" replace />} />
           <Route path="new-claim" element={<NewClaimPage />} />
-          <Route
-            path="claims"
-            element={
-              <WorkspacePlaceholder
-                title="All Claims"
-                subtitle="Manage and screen all clinic claims."
-                description="Billing and screening workflows will live here."
-              />
-            }
-          />
+          <Route path="claims" element={<ClaimsListPage />} />
+          <Route path="claims/:id" element={<ClaimDetailPage />} />
         </Route>
 
         <Route

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
 import {
   Alert,
   Autocomplete,
@@ -17,6 +16,7 @@ import {
 import AddCircleOutlined from '@mui/icons-material/AddCircleOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import FactCheckOutlined from '@mui/icons-material/FactCheckOutlined';
+import SaveOutlined from '@mui/icons-material/SaveOutlined';
 import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
 import { formatDate, todayISO } from '../../utils/dates';
 
@@ -24,6 +24,7 @@ const REQUIRED_MESSAGES = {
   patient: 'Select a patient',
   insurer: 'Select an insurer',
   date: 'Enter the date of service',
+  policyNumber: 'Enter the policy number',
   doctors: 'Assign at least one doctor',
   diagnoses: 'Select at least one diagnosis code',
   procedures: 'Select at least one procedure code',
@@ -68,16 +69,46 @@ function renderCodeOption(props, option) {
 
 const codeOptionLabel = (option) => `${option.code} — ${option.description}`;
 
-export default function ClaimDetailsForm({ lookups, lookupErrors, mode, busy, onSubmit }) {
+export default function ClaimDetailsForm({
+  lookups,
+  lookupErrors,
+  mode,
+  busy,
+  onSubmit,
+  initialClaim = null,
+  onCancel,
+}) {
   const { patients, insurers, diagnosisCodes, procedureCodes, doctors } = lookups;
 
-  const [patient, setPatient] = useState(null);
-  const [insurer, setInsurer] = useState(null);
-  const [dateOfService, setDateOfService] = useState(todayISO());
-  const [selectedDoctors, setSelectedDoctors] = useState([]);
-  const [diagnoses, setDiagnoses] = useState([]);
-  const [procedures, setProcedures] = useState([]);
-  const [modifiers, setModifiers] = useState({});
+  const [patient, setPatient] = useState(
+    () => patients.find((item) => item.id === initialClaim?.patientId) ?? null
+  );
+  const [insurer, setInsurer] = useState(
+    () => insurers.find((item) => item.id === initialClaim?.insurerId) ?? null
+  );
+  const [dateOfService, setDateOfService] = useState(initialClaim?.dateOfService ?? todayISO());
+  const [policyNumber, setPolicyNumber] = useState(initialClaim?.policyNumber ?? '');
+  const [preAuthNumber, setPreAuthNumber] = useState(initialClaim?.preAuthNumber ?? '');
+  const [selectedDoctors, setSelectedDoctors] = useState(() => {
+    const ids = new Set((initialClaim?.doctors ?? []).map((entry) => entry.doctorId));
+    return doctors.filter((doctor) => ids.has(doctor.id));
+  });
+  const [diagnoses, setDiagnoses] = useState(() => {
+    const ids = new Set((initialClaim?.diagnosisCodes ?? []).map((entry) => entry.id));
+    return diagnosisCodes.filter((code) => ids.has(code.id));
+  });
+  const [procedures, setProcedures] = useState(() =>
+    (initialClaim?.procedureCodes ?? [])
+      .map((entry) => procedureCodes.find((code) => code.id === entry.procedureCodeId))
+      .filter(Boolean)
+  );
+  const [modifiers, setModifiers] = useState(() => {
+    const initial = {};
+    (initialClaim?.procedureCodes ?? []).forEach((entry) => {
+      if (entry.modifier) initial[entry.procedureCodeId] = entry.modifier;
+    });
+    return initial;
+  });
   const [touched, setTouched] = useState({});
 
   const markTouched = (field) => setTouched((prev) => ({ ...prev, [field]: true }));
@@ -86,6 +117,7 @@ export default function ClaimDetailsForm({ lookups, lookupErrors, mode, busy, on
     patient: !patient,
     insurer: !insurer,
     date: !dateOfService,
+    policyNumber: !policyNumber.trim(),
     doctors: selectedDoctors.length === 0,
     diagnoses: diagnoses.length === 0,
     procedures: procedures.length === 0,
@@ -98,12 +130,14 @@ export default function ClaimDetailsForm({ lookups, lookupErrors, mode, busy, on
   );
 
   const isRecheck = mode === 'recheck';
+  const isEdit = mode === 'edit';
 
   const handleSubmit = () => {
     setTouched({
       patient: true,
       insurer: true,
       date: true,
+      policyNumber: true,
       doctors: true,
       diagnoses: true,
       procedures: true,
@@ -114,6 +148,8 @@ export default function ClaimDetailsForm({ lookups, lookupErrors, mode, busy, on
       patientId: patient.id,
       insurerId: insurer.id,
       dateOfService,
+      policyNumber: policyNumber.trim(),
+      preAuthNumber: preAuthNumber.trim() || null,
       doctorIds: selectedDoctors.map((doctor) => doctor.id),
       diagnosisCodeIds: diagnoses.map((item) => item.id),
       procedureCodes: procedures.map((item) => ({
@@ -256,6 +292,31 @@ export default function ClaimDetailsForm({ lookups, lookupErrors, mode, busy, on
             InputLabelProps={{ shrink: true }}
             error={Boolean(touched.date && missing.date)}
             helperText={fieldError('date')}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            label="Policy Number"
+            required
+            value={policyNumber}
+            onChange={(event) => {
+              setPolicyNumber(event.target.value);
+              markTouched('policyNumber');
+            }}
+            placeholder="e.g. BC-100234"
+            error={Boolean(touched.policyNumber && missing.policyNumber)}
+            helperText={fieldError('policyNumber')}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            label="Pre-authorization Number"
+            value={preAuthNumber}
+            onChange={(event) => setPreAuthNumber(event.target.value)}
+            placeholder="Optional, e.g. PA-2026-0042"
+            helperText="Leave blank if the payer does not require one."
           />
         </Grid>
 
@@ -408,17 +469,40 @@ export default function ClaimDetailsForm({ lookups, lookupErrors, mode, busy, on
         </Grid>
       </Grid>
 
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          flexDirection: { xs: 'column-reverse', sm: 'row' },
+          gap: 1.5,
+          mt: 4,
+        }}
+      >
+        {onCancel && (
+          <Button
+            variant="outlined"
+            size="large"
+            onClick={onCancel}
+            disabled={busy}
+            sx={{ width: { xs: '100%', sm: 'auto' } }}
+          >
+            Cancel
+          </Button>
+        )}
         <Button
           variant="contained"
           size="large"
-          startIcon={isRecheck ? <FactCheckOutlined /> : <AddCircleOutlined />}
+          startIcon={
+            isEdit ? <SaveOutlined /> : isRecheck ? <FactCheckOutlined /> : <AddCircleOutlined />
+          }
           disabled={!canSubmit || busy}
           onClick={handleSubmit}
           sx={{ width: { xs: '100%', sm: 'auto' }, minWidth: { sm: 200 } }}
         >
           {busy ? (
             <CircularProgress size={20} color="inherit" />
+          ) : isEdit ? (
+            'Save Changes'
           ) : isRecheck ? (
             'Re-check'
           ) : (

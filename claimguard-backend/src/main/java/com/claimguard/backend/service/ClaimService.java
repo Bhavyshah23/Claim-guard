@@ -56,6 +56,8 @@ public class ClaimService {
                 .insurer(insurer)
                 .createdBy(createdBy)
                 .dateOfService(request.getDateOfService())
+                .policyNumber(request.getPolicyNumber())
+                .preAuthNumber(request.getPreAuthNumber())
                 .status(ClaimStatus.DRAFT)
                 .riskScore(0)
                 .build();
@@ -69,6 +71,89 @@ public class ClaimService {
         claim = claimRepository.findById(claim.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Claim not found after creation"));
 
+        return toResponse(claim);
+    }
+
+    // Edits are only allowed before the claim is sent to the payer. Once
+    // submitted, the record is part of the payer workflow and must stay intact.
+    @Transactional
+    public ClaimResponse updateClaim(Long id, ClaimRequest request) {
+        Long clinicId = currentUserProvider.getCurrentClinicId();
+        Claim claim = getClaimScoped(id);
+
+        if (!isEditable(claim.getStatus())) {
+            throw new IllegalArgumentException("Claims can no longer be edited once submitted");
+        }
+
+        Patient patient = patientRepository.findById(request.getPatientId())
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + request.getPatientId()));
+        if (!patient.getClinic().getId().equals(clinicId)) {
+            throw new ResourceNotFoundException("Patient not found with id: " + request.getPatientId());
+        }
+
+        Insurer insurer = insurerRepository.findById(request.getInsurerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Insurer not found with id: " + request.getInsurerId()));
+
+        claim.setPatient(patient);
+        claim.setInsurer(insurer);
+        claim.setDateOfService(request.getDateOfService());
+        claim.setPolicyNumber(request.getPolicyNumber());
+        claim.setPreAuthNumber(request.getPreAuthNumber());
+
+        // Old join rows and risk flags no longer describe the edited claim.
+        // Flush the deletions before re-inserting so replacing a doctor/code
+        // with the same one can't trip the join-table unique constraints.
+        claim.getClaimDoctors().clear();
+        claim.getClaimDiagnosisCodes().clear();
+        claim.getClaimProcedureCodes().clear();
+        claim.getRiskFlags().clear();
+        claimRepository.saveAndFlush(claim);
+
+        attachDoctors(claim, request.getDoctorIds(), clinicId);
+        attachDiagnosisCodes(claim, request.getDiagnosisCodeIds());
+        attachProcedureCodes(claim, request.getProcedureCodes());
+
+        // Edited data has not been screened yet, so the claim returns to DRAFT.
+        claim.setStatus(ClaimStatus.DRAFT);
+        claim.setRiskScore(0);
+
+        Claim saved = claimRepository.save(claim);
+        saved = claimRepository.findById(saved.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Claim not found with id: " + id));
+
+        return toResponse(saved);
+    }
+
+    // CHECKED_CLEAN -> SUBMITTED. A claim that still has risk flags must be
+    // fixed and re-checked first - this prevents bypassing the screening step.
+    @Transactional
+    public ClaimResponse submitClaim(Long id) {
+        Claim claim = getClaimScoped(id);
+
+        if (claim.getStatus() != ClaimStatus.CHECKED_CLEAN) {
+            throw new IllegalArgumentException(
+                    "Only claims that passed the risk check can be submitted");
+        }
+
+        claim.setStatus(ClaimStatus.SUBMITTED);
+        claim = claimRepository.save(claim);
+        return toResponse(claim);
+    }
+
+    // Simulated payer decision: SUBMITTED -> APPROVED or DENIED.
+    @Transactional
+    public ClaimResponse resolveClaim(Long id, ClaimStatusUpdateRequest request) {
+        Claim claim = getClaimScoped(id);
+
+        if (claim.getStatus() != ClaimStatus.SUBMITTED) {
+            throw new IllegalArgumentException("Only submitted claims can be approved or denied");
+        }
+        if (request.getStatus() != ClaimStatus.APPROVED && request.getStatus() != ClaimStatus.DENIED) {
+            throw new IllegalArgumentException("Outcome must be either APPROVED or DENIED");
+        }
+
+        claim.setStatus(request.getStatus());
+        claim = claimRepository.save(claim);
         return toResponse(claim);
     }
 
@@ -89,6 +174,10 @@ public class ClaimService {
     @Transactional
     public ClaimResponse checkClaim(Long id) {
         Claim claim = getClaimScoped(id);
+
+        if (!isEditable(claim.getStatus())) {
+            throw new IllegalArgumentException("Claims can no longer be screened once submitted");
+        }
 
         List<DenialRule> activeRules = denialRuleRepository.findByActiveTrue();
         List<ClaimRiskFlag> triggeredFlags = ruleEngineService.evaluate(claim, activeRules);
@@ -113,6 +202,11 @@ public class ClaimService {
     @Transactional
     public ClaimResponse confirmClaim(Long claimId) {
         Claim claim = getClaimScoped(claimId);
+
+        if (!isEditable(claim.getStatus())) {
+            throw new IllegalArgumentException("Claims can no longer be confirmed once submitted");
+        }
+
         Long currentUserId = currentUserProvider.getCurrentUserId();
 
         ClaimDoctor claimDoctor = claimDoctorRepository.findByClaimIdAndDoctorId(claimId, currentUserId)
@@ -126,6 +220,12 @@ public class ClaimService {
         claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new ResourceNotFoundException("Claim not found with id: " + claimId));
         return toResponse(claim);
+    }
+
+    private boolean isEditable(ClaimStatus status) {
+        return status == ClaimStatus.DRAFT
+                || status == ClaimStatus.CHECKED_CLEAN
+                || status == ClaimStatus.CHECKED_FLAGGED;
     }
 
     private Claim getClaimScoped(Long id) {
@@ -234,6 +334,8 @@ public class ClaimService {
                 .insurerName(claim.getInsurer().getName())
                 .insurerId(claim.getInsurer().getId())
                 .dateOfService(claim.getDateOfService())
+                .policyNumber(claim.getPolicyNumber())
+                .preAuthNumber(claim.getPreAuthNumber())
                 .status(claim.getStatus())
                 .riskScore(claim.getRiskScore())
                 .createdByUsername(claim.getCreatedBy().getUsername())

@@ -1,5 +1,6 @@
 package com.claimguard.backend.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -22,6 +23,11 @@ public class ClaimRequest {
 
     @NotNull(message = "Date of service is required")
     private LocalDate dateOfService;
+
+    @NotBlank(message = "Policy number is required")
+    private String policyNumber;
+
+    private String preAuthNumber;
 
     @NotEmpty(message = "At least one doctor must be assigned to the claim")
     private List<Long> doctorIds;

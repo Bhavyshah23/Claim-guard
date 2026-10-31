@@ -53,6 +53,14 @@ public class Claim {
     @Column(name = "date_of_service", nullable = false)
     private LocalDate dateOfService;
 
+    // The patient's insurance policy number on file with the insurer
+    @Column(name = "policy_number", length = 50)
+    private String policyNumber;
+
+    // Optional payer pre-authorization / pre-certification reference
+    @Column(name = "pre_auth_number", length = 50)
+    private String preAuthNumber;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default

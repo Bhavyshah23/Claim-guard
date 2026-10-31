@@ -2,6 +2,7 @@ package com.claimguard.backend.controller;
 
 import com.claimguard.backend.dto.ClaimRequest;
 import com.claimguard.backend.dto.ClaimResponse;
+import com.claimguard.backend.dto.ClaimStatusUpdateRequest;
 import com.claimguard.backend.service.ClaimService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,29 @@ public class ClaimController {
     @PreAuthorize("hasAnyRole('ADMIN', 'BILLING_STAFF')")
     public ResponseEntity<ClaimResponse> createClaim(@Valid @RequestBody ClaimRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(claimService.createClaim(request));
+    }
+
+    // Edit a draft or already-screened claim. Blocked once submitted.
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BILLING_STAFF')")
+    public ResponseEntity<ClaimResponse> updateClaim(
+            @PathVariable Long id, @Valid @RequestBody ClaimRequest request) {
+        return ResponseEntity.ok(claimService.updateClaim(id, request));
+    }
+
+    // Only a clean claim can move into the payer submission stage.
+    @PostMapping("/{id}/submit")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BILLING_STAFF')")
+    public ResponseEntity<ClaimResponse> submitClaim(@PathVariable Long id) {
+        return ResponseEntity.ok(claimService.submitClaim(id));
+    }
+
+    // Simulated payer decision - Admin records APPROVED or DENIED.
+    @PutMapping("/{id}/outcome")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ClaimResponse> resolveClaim(
+            @PathVariable Long id, @Valid @RequestBody ClaimStatusUpdateRequest request) {
+        return ResponseEntity.ok(claimService.resolveClaim(id, request));
     }
 
     // Runs the rules engine against this claim. Callable repeatedly -

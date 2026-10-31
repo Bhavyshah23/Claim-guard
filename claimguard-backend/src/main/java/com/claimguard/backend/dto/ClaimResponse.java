@@ -22,6 +22,8 @@ public class ClaimResponse {
     private String insurerName;
     private Long insurerId;
     private LocalDate dateOfService;
+    private String policyNumber;
+    private String preAuthNumber;
     private ClaimStatus status;
     private Integer riskScore;
     private String createdByUsername;

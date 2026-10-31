@@ -13,6 +13,8 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import AddCircleOutlined from '@mui/icons-material/AddCircleOutlined';
+import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import EditOutlined from '@mui/icons-material/EditOutlined';
 import FactCheckOutlined from '@mui/icons-material/FactCheckOutlined';
 import PageHeader from '../../components/layout/PageHeader';
@@ -24,9 +26,12 @@ import {
   fetchInsurers,
   fetchPatients,
   fetchProcedureCodes,
+  submitClaim,
+  updateClaim,
 } from '../../api/claimsApi';
 import { extractRequestError } from '../../utils/requestErrors';
 import { formatDate } from '../../utils/dates';
+import { EDITABLE_STATUSES } from '../../utils/claimStatus';
 import ClaimDetailsForm from './ClaimDetailsForm';
 import RiskResultsPanel from './RiskResultsPanel';
 
@@ -130,9 +135,11 @@ function ClaimSummaryCard({ claim, onEdit }) {
         </Box>
         <Stack direction="row" spacing={1} alignItems="center">
           <Chip label={STATUS_LABELS[claim.status] ?? claim.status} sx={(theme) => statusChipSx(theme, claim.status)} />
-          <Button size="small" startIcon={<EditOutlined />} onClick={onEdit} sx={{ color: 'text.secondary' }}>
-            Edit details
-          </Button>
+          {onEdit && (
+            <Button size="small" startIcon={<EditOutlined />} onClick={onEdit} sx={{ color: 'text.secondary' }}>
+              Edit details
+            </Button>
+          )}
         </Stack>
       </Stack>
       <Divider sx={{ my: 2.25 }} />
@@ -146,6 +153,8 @@ function ClaimSummaryCard({ claim, onEdit }) {
       >
         <SummaryRow label="Insurer" value={claim.insurerName} />
         <SummaryRow label="Date of service" value={formatDate(claim.dateOfService)} />
+        <SummaryRow label="Policy number" value={claim.policyNumber} />
+        <SummaryRow label="Pre-authorization" value={claim.preAuthNumber || 'Not provided'} />
         <SummaryRow
           label="Doctors"
           value={(claim.doctors ?? []).map((doctor) => doctor.doctorUsername).join(', ')}
@@ -198,6 +207,53 @@ function RunRiskCheckCard({ checking, onRun }) {
   );
 }
 
+function SubmittedCard({ claim, onReset }) {
+  const decision = claim.status === 'APPROVED' || claim.status === 'DENIED';
+  return (
+    <Card sx={{ p: { xs: 2.5, sm: 4 } }}>
+      <Stack direction="row" spacing={2} alignItems="flex-start">
+        <Box
+          sx={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: decision && claim.status === 'DENIED' ? '#FEF2F2' : '#F0FDF4',
+            color: decision && claim.status === 'DENIED' ? '#DC2626' : '#16A34A',
+          }}
+        >
+          <CheckCircleOutlined sx={{ fontSize: 28 }} />
+        </Box>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography sx={{ fontSize: 17, fontWeight: 700 }}>
+            {decision
+              ? `Payer decision recorded: ${claim.status === 'APPROVED' ? 'Approved' : 'Denied'}`
+              : 'Claim submitted to the payer'}
+          </Typography>
+          <Typography sx={{ fontSize: 14, color: 'text.secondary', mt: 0.5 }}>
+            {decision
+              ? 'This simulated payer outcome is visible on the claim detail page.'
+              : `${claim.patientName}'s claim was submitted to ${claim.insurerName}. An administrator can record the simulated payer decision from the claim detail page.`}
+          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+            <Button
+              variant="contained"
+              startIcon={<AddCircleOutlined />}
+              onClick={onReset}
+              sx={{ width: { xs: '100%', sm: 'auto' } }}
+            >
+              Create Another Claim
+            </Button>
+          </Box>
+        </Box>
+      </Stack>
+    </Card>
+  );
+}
+
 export default function NewClaimPage() {
   const [lookups, setLookups] = useState(INITIAL_LOOKUPS);
   const [lookupErrors, setLookupErrors] = useState({});
@@ -206,6 +262,7 @@ export default function NewClaimPage() {
   const [checkResult, setCheckResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [submitBusy, setSubmitBusy] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(true);
   const [formKey, setFormKey] = useState(0);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', tone: 'success' });
@@ -255,6 +312,7 @@ export default function NewClaimPage() {
     setChecking(true);
     try {
       const result = await checkClaim(claimId);
+      setClaim(result);
       setCheckResult(result);
       setDetailsExpanded(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -267,7 +325,19 @@ export default function NewClaimPage() {
 
   const handleSubmit = async (payload) => {
     if (claim) {
-      await runCheck(claim.id);
+      setChecking(true);
+      try {
+        await updateClaim(claim.id, payload);
+        const result = await checkClaim(claim.id);
+        setClaim(result);
+        setCheckResult(result);
+        setDetailsExpanded(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (error) {
+        showSnackbar(extractRequestError(error, 'Risk check failed — please try again'), 'error');
+      } finally {
+        setChecking(false);
+      }
       return;
     }
 
@@ -283,6 +353,22 @@ export default function NewClaimPage() {
       showSnackbar(extractRequestError(error), 'error');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleSubmitToPayer = async () => {
+    if (!claim) return;
+    setSubmitBusy(true);
+    try {
+      const updated = await submitClaim(claim.id);
+      setClaim(updated);
+      setCheckResult(null);
+      showSnackbar('Claim submitted to the payer', 'success');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error) {
+      showSnackbar(extractRequestError(error, 'Could not submit the claim'), 'error');
+    } finally {
+      setSubmitBusy(false);
     }
   };
 
@@ -314,17 +400,33 @@ export default function NewClaimPage() {
             lookups={lookups}
             lookupErrors={lookupErrors}
             mode={claim ? 'recheck' : 'create'}
+            initialClaim={claim}
             busy={formBusy}
             onSubmit={handleSubmit}
+            onCancel={claim ? () => setDetailsExpanded(false) : undefined}
           />
         )}
       </Box>
 
       {claim && !detailsExpanded && (
         <Stack spacing={3}>
-          <ClaimSummaryCard claim={claim} onEdit={handleEdit} />
-          {!checkResult && <RunRiskCheckCard checking={checking} onRun={() => runCheck(claim.id)} />}
-          {checkResult && <RiskResultsPanel result={checkResult} onEdit={handleEdit} onReset={handleReset} />}
+          <ClaimSummaryCard
+            claim={claim}
+            onEdit={EDITABLE_STATUSES.includes(claim.status) ? handleEdit : undefined}
+          />
+          {!EDITABLE_STATUSES.includes(claim.status) ? (
+            <SubmittedCard claim={claim} onReset={handleReset} />
+          ) : !checkResult ? (
+            <RunRiskCheckCard checking={checking} onRun={() => runCheck(claim.id)} />
+          ) : (
+            <RiskResultsPanel
+              result={checkResult}
+              onEdit={handleEdit}
+              onReset={handleReset}
+              onSubmit={handleSubmitToPayer}
+              submitting={submitBusy}
+            />
+          )}
         </Stack>
       )}
 

@@ -2,6 +2,7 @@ import { Box, Button, Card, Chip, CircularProgress, Stack, Typography } from '@m
 import AddCircleOutlined from '@mui/icons-material/AddCircleOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import EditOutlined from '@mui/icons-material/EditOutlined';
+import SendOutlined from '@mui/icons-material/SendOutlined';
 import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
 import { riskScoreColor, SEVERITY_META } from '../../utils/severity';
 
@@ -145,7 +146,7 @@ function StatusBanner({ result }) {
   );
 }
 
-export default function RiskResultsPanel({ result, onEdit, onReset }) {
+export default function RiskResultsPanel({ result, onEdit, onReset, onSubmit, submitting = false }) {
   const clean = result.status === 'CHECKED_CLEAN';
   const flags = result.riskFlags ?? [];
   const score = Math.max(0, Math.min(100, Math.round(result.riskScore ?? 0)));
@@ -191,17 +192,38 @@ export default function RiskResultsPanel({ result, onEdit, onReset }) {
         </>
       )}
 
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          flexDirection: { xs: 'column-reverse', sm: 'row' },
+          gap: 1.5,
+          mt: 4,
+        }}
+      >
         {clean ? (
-          <Button
-            variant="contained"
-            size="large"
-            startIcon={<AddCircleOutlined />}
-            onClick={onReset}
-            sx={{ width: { xs: '100%', sm: 'auto' } }}
-          >
-            Create Another Claim
-          </Button>
+          <>
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={<AddCircleOutlined />}
+              onClick={onReset}
+              disabled={submitting}
+              sx={{ width: { xs: '100%', sm: 'auto' } }}
+            >
+              Create Another Claim
+            </Button>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<SendOutlined />}
+              onClick={onSubmit}
+              disabled={!onSubmit || submitting}
+              sx={{ width: { xs: '100%', sm: 'auto' }, minWidth: { sm: 170 } }}
+            >
+              {submitting ? <CircularProgress size={20} color="inherit" /> : 'Submit Claim'}
+            </Button>
+          </>
         ) : (
           <Button
             variant="outlined"

@@ -68,7 +68,41 @@ claimguard/
 
 ## Getting Started
 
-Setup instructions for the backend and frontend will be added here as each part is scaffolded.
+### Backend
+
+Create `claimguard-backend/src/main/resources/application-local.properties` with your MySQL credentials, then run:
+
+```bash
+cd claimguard-backend
+./mvnw spring-boot:run
+```
+
+The API runs at `http://localhost:8080`.
+
+### Frontend
+
+```bash
+cd claimguard-client
+npm install
+npm start
+```
+
+The app runs at `http://localhost:3000` by default (the backend CORS configuration also allows `http://localhost:3001`).
+
+### Demo logins
+
+On first startup against an empty database, `DataSeeder` creates a demo clinic with sample
+patients, insurers, diagnosis/procedure codes, denial rules and claims.
+
+| Role | Username | Password |
+|---|---|---|
+| Admin | `admin` | `password123` |
+| Doctor | `doctor` | `password123` |
+| Billing Staff | `billing` | `password123` |
+
+Demo claims cover a flagged claim, a clean claim ready to submit, and a submitted claim awaiting
+an admin outcome. The seeder skips itself if any user already exists, so existing data is never
+overwritten.
 
 ---
 

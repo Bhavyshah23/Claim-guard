@@ -27,12 +27,28 @@ export function createClaim(payload) {
   return axiosInstance.post('/api/claims', payload).then(toData);
 }
 
+export function fetchClaims() {
+  return axiosInstance.get('/api/claims').then(toData);
+}
+
+export function fetchClaim(claimId) {
+  return axiosInstance.get(`/api/claims/${claimId}`).then(toData);
+}
+
+export function updateClaim(claimId, payload) {
+  return axiosInstance.put(`/api/claims/${claimId}`, payload).then(toData);
+}
+
 export function checkClaim(claimId) {
   return axiosInstance.post(`/api/claims/${claimId}/check`).then(toData);
 }
 
-export function fetchClaims() {
-  return axiosInstance.get('/api/claims').then(toData);
+export function submitClaim(claimId) {
+  return axiosInstance.post(`/api/claims/${claimId}/submit`).then(toData);
+}
+
+export function updateClaimOutcome(claimId, status) {
+  return axiosInstance.put(`/api/claims/${claimId}/outcome`, { status }).then(toData);
 }
 
 // Confirms the currently logged-in doctor's entry on the claim.
