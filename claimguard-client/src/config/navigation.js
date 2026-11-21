@@ -5,11 +5,15 @@ import RuleOutlined from '@mui/icons-material/RuleOutlined';
 import AssignmentIndOutlined from '@mui/icons-material/AssignmentIndOutlined';
 import AddCircleOutlined from '@mui/icons-material/AddCircleOutlined';
 import PeopleOutlined from '@mui/icons-material/PeopleOutlined';
+import AccountBalanceOutlined from '@mui/icons-material/AccountBalanceOutlined';
+import LocalHospitalOutlined from '@mui/icons-material/LocalHospitalOutlined';
 
 export const NAV_ITEMS = {
   ADMIN: [
     { label: 'Dashboard', path: '/admin/dashboard', icon: DashboardOutlined },
     { label: 'Patients', path: '/admin/patients', icon: PeopleOutlined },
+    { label: 'Insurers', path: '/admin/insurers', icon: AccountBalanceOutlined },
+    { label: 'Codes', path: '/admin/codes', icon: LocalHospitalOutlined },
     { label: 'Claims', path: '/admin/claims', icon: AssignmentOutlined },
     { label: 'Staff Management', path: '/admin/staff', icon: GroupOutlined },
     { label: 'Rule Configuration', path: '/admin/rules', icon: RuleOutlined },
@@ -22,6 +26,7 @@ export const NAV_ITEMS = {
   BILLING_STAFF: [
     { label: 'New Claim', path: '/billing/new-claim', icon: AddCircleOutlined },
     { label: 'All Claims', path: '/billing/claims', icon: AssignmentOutlined },
+    { label: 'Screening Rules', path: '/billing/rules', icon: RuleOutlined },
   ],
 };
 

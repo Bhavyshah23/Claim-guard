@@ -15,33 +15,37 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/rules")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
 public class DenialRuleController {
 
     private final DenialRuleService denialRuleService;
 
+    // Billing staff can read the clinic's rules. Only Admin can change them.
     @GetMapping
     public ResponseEntity<List<DenialRuleResponse>> getAllRules() {
         return ResponseEntity.ok(denialRuleService.getAllRules());
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DenialRuleResponse> createRule(@Valid @RequestBody DenialRuleRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(denialRuleService.createRule(request));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DenialRuleResponse> updateRule(
             @PathVariable Long id, @Valid @RequestBody DenialRuleRequest request) {
         return ResponseEntity.ok(denialRuleService.updateRule(id, request));
     }
 
     @PatchMapping("/{id}/active")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DenialRuleResponse> toggleActive(@PathVariable Long id) {
         return ResponseEntity.ok(denialRuleService.toggleActive(id));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteRule(@PathVariable Long id) {
         denialRuleService.deleteRule(id);
         return ResponseEntity.noContent().build();

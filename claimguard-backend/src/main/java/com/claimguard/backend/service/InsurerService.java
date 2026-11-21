@@ -4,6 +4,7 @@ import com.claimguard.backend.dto.InsurerRequest;
 import com.claimguard.backend.dto.InsurerResponse;
 import com.claimguard.backend.entity.Insurer;
 import com.claimguard.backend.exception.ResourceNotFoundException;
+import com.claimguard.backend.repository.ClaimRepository;
 import com.claimguard.backend.repository.InsurerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import java.util.List;
 public class InsurerService {
 
     private final InsurerRepository insurerRepository;
+    private final ClaimRepository claimRepository;
 
     // Insurers are shared reference data (not clinic-scoped) - every clinic
     // using this ClaimGuard instance sees the same list of insurance companies.
@@ -41,6 +43,10 @@ public class InsurerService {
     public void deleteInsurer(Long id) {
         if (!insurerRepository.existsById(id)) {
             throw new ResourceNotFoundException("Insurer not found with id: " + id);
+        }
+        if (claimRepository.existsByInsurerId(id)) {
+            throw new IllegalArgumentException(
+                    "Cannot delete this insurer — claims are already filed against it.");
         }
         insurerRepository.deleteById(id);
     }

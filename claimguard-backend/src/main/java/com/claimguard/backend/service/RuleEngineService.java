@@ -83,6 +83,14 @@ public class RuleEngineService {
     }
 
     private boolean checkMissingField(Claim claim, JsonNode condition) {
+        if (condition.hasNonNull("insurerName")) {
+            String targetInsurer = condition.get("insurerName").asText();
+            if (claim.getInsurer() == null
+                    || !claim.getInsurer().getName().equalsIgnoreCase(targetInsurer)) {
+                return false;
+            }
+        }
+
         String field = condition.get("field").asText();
 
         if ("doctorConfirmation".equals(field)) {

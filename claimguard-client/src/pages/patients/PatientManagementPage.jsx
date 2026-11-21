@@ -389,7 +389,7 @@ export default function PatientManagementPage() {
           title="No patients yet"
           subtitle={
             canManage
-              ? 'Add your first patient so billing staff can create claims for them.'
+              ? 'Add your first patient so billing staff can create claims for them. Demo patients load only on a fresh database.'
               : 'Patients will appear here once your admin or doctor adds them.'
           }
           actionLabel={canManage ? 'Add Patient' : undefined}

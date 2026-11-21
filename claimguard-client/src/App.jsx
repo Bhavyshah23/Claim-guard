@@ -12,6 +12,8 @@ import RuleConfigurationPage from './pages/admin/RuleConfigurationPage';
 import NewClaimPage from './pages/billing/NewClaimPage';
 import MyClaimsPage from './pages/doctor/MyClaimsPage';
 import StaffManagementPage from './pages/admin/StaffManagementPage';
+import InsurerManagementPage from './pages/admin/InsurerManagementPage';
+import CodeCatalogPage from './pages/admin/CodeCatalogPage';
 import DashboardPage from './pages/admin/DashboardPage';
 import PatientManagementPage from './pages/patients/PatientManagementPage';
 import theme from './theme';
@@ -56,6 +58,8 @@ export default function App() {
             element={<DashboardPage />}
           />
           <Route path="patients" element={<PatientManagementPage />} />
+          <Route path="insurers" element={<InsurerManagementPage />} />
+          <Route path="codes" element={<CodeCatalogPage />} />
           <Route path="claims" element={<ClaimsListPage />} />
           <Route path="claims/:id" element={<ClaimDetailPage />} />
           <Route
@@ -90,6 +94,7 @@ export default function App() {
           <Route path="new-claim" element={<NewClaimPage />} />
           <Route path="claims" element={<ClaimsListPage />} />
           <Route path="claims/:id" element={<ClaimDetailPage />} />
+          <Route path="rules" element={<RuleConfigurationPage readOnly />} />
         </Route>
 
         <Route

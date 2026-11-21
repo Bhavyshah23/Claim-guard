@@ -179,7 +179,8 @@ public class ClaimService {
             throw new IllegalArgumentException("Claims can no longer be screened once submitted");
         }
 
-        List<DenialRule> activeRules = denialRuleRepository.findByActiveTrue();
+        List<DenialRule> activeRules = denialRuleRepository
+                .findByClinicIdAndActiveTrue(claim.getClinic().getId());
         List<ClaimRiskFlag> triggeredFlags = ruleEngineService.evaluate(claim, activeRules);
 
         // orphanRemoval=true on Claim.riskFlags means clearing this list

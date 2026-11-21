@@ -267,7 +267,7 @@ export default function ClaimsListPage() {
           filtered={false}
           icon={<AssignmentOutlined sx={{ fontSize: 30 }} />}
           title="No claims yet"
-          subtitle="Claims will appear here as soon as your billing staff starts creating them."
+          subtitle="Claims will appear here as soon as your billing staff starts creating them. Demo claims load only on a fresh database."
         />
       ) : !loadError && filteredClaims.length === 0 ? (
         <EmptyState

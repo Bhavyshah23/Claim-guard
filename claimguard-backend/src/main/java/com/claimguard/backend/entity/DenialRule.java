@@ -18,6 +18,13 @@ public class DenialRule {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Rules belong to one clinic. A second clinic must not see or run them.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "clinic_id")
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
+    private Clinic clinic;
+
     @Column(name = "rule_name", nullable = false, length = 150)
     private String ruleName;
 

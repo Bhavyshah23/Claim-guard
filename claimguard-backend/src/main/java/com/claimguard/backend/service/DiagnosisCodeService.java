@@ -4,6 +4,7 @@ import com.claimguard.backend.dto.CodeRequest;
 import com.claimguard.backend.dto.CodeResponse;
 import com.claimguard.backend.entity.DiagnosisCode;
 import com.claimguard.backend.exception.ResourceNotFoundException;
+import com.claimguard.backend.repository.ClaimDiagnosisCodeRepository;
 import com.claimguard.backend.repository.DiagnosisCodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import java.util.List;
 public class DiagnosisCodeService {
 
     private final DiagnosisCodeRepository diagnosisCodeRepository;
+    private final ClaimDiagnosisCodeRepository claimDiagnosisCodeRepository;
 
     public List<CodeResponse> getAllCodes() {
         return diagnosisCodeRepository.findAll().stream().map(this::toResponse).toList();
@@ -32,6 +34,10 @@ public class DiagnosisCodeService {
     public void deleteCode(Long id) {
         if (!diagnosisCodeRepository.existsById(id)) {
             throw new ResourceNotFoundException("Diagnosis code not found with id: " + id);
+        }
+        if (claimDiagnosisCodeRepository.existsByDiagnosisCode_Id(id)) {
+            throw new IllegalArgumentException(
+                    "Cannot delete this diagnosis code — it is already used on a claim.");
         }
         diagnosisCodeRepository.deleteById(id);
     }

@@ -16,7 +16,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import ArrowForwardOutlined from '@mui/icons-material/ArrowForwardOutlined';
 import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
@@ -223,6 +223,7 @@ function DashboardSkeleton() {
 }
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -365,8 +366,9 @@ export default function DashboardPage() {
             <AssignmentOutlined sx={{ fontSize: 34 }} />
           </Box>
           <Typography sx={{ mt: 3, fontSize: 20, fontWeight: 700 }}>No claims yet</Typography>
-          <Typography sx={{ mt: 1, color: 'text.secondary', fontSize: 14.5, maxWidth: 420 }}>
-            Claims will appear here once your billing staff starts creating them.
+          <Typography sx={{ mt: 1, color: 'text.secondary', fontSize: 14.5, maxWidth: 460 }}>
+            Claims will appear here once your billing staff starts creating them. Demo claims load
+            only on a fresh database.
           </Typography>
         </Card>
       </>
@@ -603,7 +605,12 @@ export default function DashboardPage() {
                     background: '#F1F5F9',
                   };
                   return (
-                    <TableRow key={claim.id} hover>
+                    <TableRow
+                      key={claim.id}
+                      hover
+                      onClick={() => navigate(`/admin/claims/${claim.id}`)}
+                      sx={{ cursor: 'pointer' }}
+                    >
                       <TableCell sx={{ pl: 3, py: 1.25 }}>
                         <Typography sx={{ fontSize: 14, fontWeight: 600 }}>{claim.patientName}</Typography>
                       </TableCell>

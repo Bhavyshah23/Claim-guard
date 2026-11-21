@@ -19,4 +19,6 @@ public interface ClaimRepository extends JpaRepository<Claim, Long> {
     List<Claim> findByCreatedByIdAndClinicId(Long userId, Long clinicId);
 
     boolean existsByPatientId(Long patientId);
+
+    boolean existsByInsurerId(Long insurerId);
 }

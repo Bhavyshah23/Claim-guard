@@ -10,4 +10,6 @@ import java.util.List;
 public interface ClaimProcedureCodeRepository extends JpaRepository<ClaimProcedureCode, Long> {
 
     List<ClaimProcedureCode> findByClaimId(Long claimId);
+
+    boolean existsByProcedureCode_Id(Long procedureCodeId);
 }

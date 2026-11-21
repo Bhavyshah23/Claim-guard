@@ -38,6 +38,7 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        assignOrphanRules();
         if (userRepository.count() > 0) {
             log.info("Existing users found - skipping DataSeeder");
             return;
@@ -80,36 +81,42 @@ public class DataSeeder implements CommandLineRunner {
         ProcedureCode ecg = procedure("93000", "Electrocardiogram, routine with interpretation", "Diagnostic");
 
         DenialRule doctorConfirmationRule = createRule(
+                clinic,
                 "Missing doctor confirmation",
                 RuleConditionType.MISSING_FIELD,
                 RuleSeverity.HIGH,
                 "{\"field\":\"doctorConfirmation\"}",
                 "The assigned doctor has not confirmed the diagnosis and procedure codes.");
         DenialRule preAuthRule = createRule(
-                "Missing pre-authorization number",
+                clinic,
+                "BlueCross missing pre-authorization number",
                 RuleConditionType.MISSING_FIELD,
                 RuleSeverity.HIGH,
-                "{\"field\":\"preAuthNumber\"}",
-                "A pre-authorization number is required before this claim can be submitted.");
+                "{\"field\":\"preAuthNumber\",\"insurerName\":\"BlueCross BlueShield\"}",
+                "BlueCross BlueShield requires a pre-authorization number before this claim can be submitted.");
         DenialRule modifier25Rule = createRule(
+                clinic,
                 "Missing modifier 25 on office visit",
                 RuleConditionType.MISSING_MODIFIER,
                 RuleSeverity.HIGH,
                 "{\"procedureCode\":\"99213\",\"requiredModifier\":\"25\"}",
                 "Procedure 99213 requires modifier 25 on this claim.");
         DenialRule blueCrossMriRule = createRule(
+                clinic,
                 "BlueCross MRI modifier 59 requirement",
                 RuleConditionType.INSURER_SPECIFIC,
                 RuleSeverity.MEDIUM,
                 "{\"insurerName\":\"BlueCross BlueShield\",\"procedureCode\":\"73721\",\"requiredModifier\":\"59\"}",
                 "BlueCross BlueShield requires modifier 59 on MRI procedure 73721.");
         DenialRule codeMismatchRule = createRule(
+                clinic,
                 "Bronchitis diagnosis incompatible with MRI",
                 RuleConditionType.CODE_MISMATCH,
                 RuleSeverity.HIGH,
                 "{\"diagnosisCode\":\"J20.9\",\"incompatibleProcedureCode\":\"73721\"}",
                 "Diagnosis J20.9 is not clinically compatible with procedure 73721.");
         DenialRule mriModifierRule = createRule(
+                clinic,
                 "Missing modifier 59 on MRI",
                 RuleConditionType.MISSING_MODIFIER,
                 RuleSeverity.MEDIUM,
@@ -190,9 +197,10 @@ public class DataSeeder implements CommandLineRunner {
                         .build()));
     }
 
-    private DenialRule createRule(String name, RuleConditionType type, RuleSeverity severity,
+    private DenialRule createRule(Clinic clinic, String name, RuleConditionType type, RuleSeverity severity,
                                   String conditionLogic, String message) {
         return denialRuleRepository.save(DenialRule.builder()
+                .clinic(clinic)
                 .ruleName(name)
                 .conditionType(type)
                 .severity(severity)
@@ -249,6 +257,23 @@ public class DataSeeder implements CommandLineRunner {
         claim.setRiskScore(riskScoreCalculator.calculate(flags));
 
         claimRepository.save(claim);
+    }
+
+    private void assignOrphanRules() {
+        List<DenialRule> orphans = denialRuleRepository.findByClinicIsNull();
+        if (orphans.isEmpty()) {
+            return;
+        }
+        List<Clinic> clinics = clinicRepository.findAll();
+        if (clinics.size() != 1) {
+            log.warn("Found {} rules without a clinic and {} clinics - left them unassigned",
+                    orphans.size(), clinics.size());
+            return;
+        }
+        Clinic clinic = clinics.get(0);
+        orphans.forEach(rule -> rule.setClinic(clinic));
+        denialRuleRepository.saveAll(orphans);
+        log.info("Assigned {} existing rules to clinic '{}'", orphans.size(), clinic.getName());
     }
 
     private record ProcedureSelection(ProcedureCode procedureCode, String modifier) {

@@ -9,6 +9,10 @@ import java.util.List;
 @Repository
 public interface DenialRuleRepository extends JpaRepository<DenialRule, Long> {
 
-    // The Rules Engine loads only active rules when evaluating a claim
-    List<DenialRule> findByActiveTrue();
+    List<DenialRule> findByClinicId(Long clinicId);
+
+    // The Rules Engine loads only this clinic's active rules
+    List<DenialRule> findByClinicIdAndActiveTrue(Long clinicId);
+
+    List<DenialRule> findByClinicIsNull();
 }

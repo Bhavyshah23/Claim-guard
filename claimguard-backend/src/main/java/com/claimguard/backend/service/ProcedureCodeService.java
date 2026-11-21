@@ -4,6 +4,7 @@ import com.claimguard.backend.dto.CodeRequest;
 import com.claimguard.backend.dto.CodeResponse;
 import com.claimguard.backend.entity.ProcedureCode;
 import com.claimguard.backend.exception.ResourceNotFoundException;
+import com.claimguard.backend.repository.ClaimProcedureCodeRepository;
 import com.claimguard.backend.repository.ProcedureCodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import java.util.List;
 public class ProcedureCodeService {
 
     private final ProcedureCodeRepository procedureCodeRepository;
+    private final ClaimProcedureCodeRepository claimProcedureCodeRepository;
 
     public List<CodeResponse> getAllCodes() {
         return procedureCodeRepository.findAll().stream().map(this::toResponse).toList();
@@ -32,6 +34,10 @@ public class ProcedureCodeService {
     public void deleteCode(Long id) {
         if (!procedureCodeRepository.existsById(id)) {
             throw new ResourceNotFoundException("Procedure code not found with id: " + id);
+        }
+        if (claimProcedureCodeRepository.existsByProcedureCode_Id(id)) {
+            throw new IllegalArgumentException(
+                    "Cannot delete this procedure code — it is already used on a claim.");
         }
         procedureCodeRepository.deleteById(id);
     }

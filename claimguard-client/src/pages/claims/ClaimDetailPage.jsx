@@ -398,7 +398,7 @@ export default function ClaimDetailPage() {
         <Button
           variant="contained"
           startIcon={busyAction === 'confirm' ? <CircularProgress size={16} color="inherit" /> : <CheckCircleOutlined />}
-          onClick={() => runAction('confirm', () => confirmClaim(claim.id), 'Claim confirmed')}
+          onClick={() => runAction('confirm', () => confirmClaim(claim.id), 'Confirmed. Run the risk check again so this flag can clear.')}
           disabled={busyAction !== null}
         >
           Confirm
@@ -478,6 +478,11 @@ export default function ClaimDetailPage() {
       />
 
       <Stack spacing={2.5}>
+        {role === 'ADMIN' && editable && (
+          <Alert severity="info">
+            Billing staff edit and submit this claim. You can run a check here, and record the payer outcome after it is submitted.
+          </Alert>
+        )}
         <Card sx={{ p: { xs: 2.5, sm: 3.5 } }}>
           <Stack
             direction="row"

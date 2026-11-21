@@ -10,4 +10,6 @@ import java.util.List;
 public interface ClaimDiagnosisCodeRepository extends JpaRepository<ClaimDiagnosisCode, Long> {
 
     List<ClaimDiagnosisCode> findByClaimId(Long claimId);
+
+    boolean existsByDiagnosisCode_Id(Long diagnosisCodeId);
 }

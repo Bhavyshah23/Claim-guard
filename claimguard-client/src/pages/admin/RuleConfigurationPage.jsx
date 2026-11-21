@@ -66,7 +66,7 @@ const CONDITION_TEMPLATES = {
 
 const CONDITION_HINTS = {
   MISSING_FIELD:
-    'Use "field": "preAuthNumber" or "field": "doctorConfirmation". The rule flags the claim when that value is missing.',
+    'Use "field": "preAuthNumber" or "field": "doctorConfirmation". Add optional "insurerName" to limit the rule to one insurer.',
   MISSING_MODIFIER:
     'Requires "procedureCode" and "requiredModifier". The rule flags matching procedures without that modifier.',
   INSURER_SPECIFIC:
@@ -155,7 +155,7 @@ function RulesSkeleton() {
   );
 }
 
-function EmptyState() {
+function EmptyState({ readOnly }) {
   return (
     <Card
       sx={{
@@ -182,13 +182,15 @@ function EmptyState() {
       </Box>
       <Typography sx={{ mt: 2.5, fontSize: 17, fontWeight: 700 }}>No rules configured</Typography>
       <Typography sx={{ mt: 0.75, color: 'text.secondary', fontSize: 14, maxWidth: 420 }}>
-        Add a denial rule to start screening claims before they are submitted to a payer.
+        {readOnly
+          ? 'Your clinic admin has not added screening rules yet.'
+          : 'Add a denial rule to start screening claims before they are submitted to a payer.'}
       </Typography>
     </Card>
   );
 }
 
-export default function RuleConfigurationPage() {
+export default function RuleConfigurationPage({ readOnly = false }) {
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -377,12 +379,18 @@ export default function RuleConfigurationPage() {
   return (
     <>
       <PageHeader
-        title="Rule Configuration"
-        subtitle="Create, edit and switch claim screening rules on or off"
+        title={readOnly ? 'Screening Rules' : 'Rule Configuration'}
+        subtitle={
+          readOnly
+            ? 'Rules your clinic uses before a claim is submitted. Only an admin can change them.'
+            : 'Create, edit and switch claim screening rules on or off'
+        }
         action={
-          <Button variant="contained" startIcon={<AddCircleOutlined />} onClick={openCreate}>
-            Add Rule
-          </Button>
+          readOnly ? null : (
+            <Button variant="contained" startIcon={<AddCircleOutlined />} onClick={openCreate}>
+              Add Rule
+            </Button>
+          )
         }
       />
 
@@ -425,7 +433,7 @@ export default function RuleConfigurationPage() {
           </TableContainer>
         </Card>
       ) : !loadError && rules.length === 0 ? (
-        <EmptyState />
+        <EmptyState readOnly={readOnly} />
       ) : !loadError ? (
         <Card sx={{ overflow: 'hidden' }}>
           <TableContainer>
@@ -436,9 +444,11 @@ export default function RuleConfigurationPage() {
                   <TableCell>Type</TableCell>
                   <TableCell>Severity</TableCell>
                   <TableCell>Active</TableCell>
-                  <TableCell align="right" sx={{ pr: 3 }}>
-                    Actions
-                  </TableCell>
+                  {!readOnly && (
+                    <TableCell align="right" sx={{ pr: 3 }}>
+                      Actions
+                    </TableCell>
+                  )}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -480,7 +490,7 @@ export default function RuleConfigurationPage() {
                           size="small"
                           checked={Boolean(rule.active)}
                           onChange={() => handleToggle(rule)}
-                          disabled={togglingId === rule.id}
+                          disabled={readOnly || togglingId === rule.id}
                           inputProps={{ 'aria-label': `Toggle ${rule.ruleName}` }}
                         />
                         <Typography sx={{ fontSize: 12.5, color: 'text.secondary', minWidth: 44 }}>
@@ -488,6 +498,7 @@ export default function RuleConfigurationPage() {
                         </Typography>
                       </Stack>
                     </TableCell>
+                    {!readOnly && (
                     <TableCell align="right" sx={{ pr: 3, py: 1.5 }}>
                       <Stack direction="row" spacing={0.5} justifyContent="flex-end">
                         <Tooltip title="Edit rule">
@@ -507,6 +518,7 @@ export default function RuleConfigurationPage() {
                         </Tooltip>
                       </Stack>
                     </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -515,6 +527,7 @@ export default function RuleConfigurationPage() {
         </Card>
       ) : null}
 
+      {!readOnly && (
       <Drawer
         anchor="right"
         open={drawerOpen}
@@ -714,6 +727,7 @@ export default function RuleConfigurationPage() {
           </Button>
         </DialogActions>
       </Dialog>
+      )}
 
       <Snackbar
         open={snackbar.open}

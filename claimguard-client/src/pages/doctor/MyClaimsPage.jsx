@@ -137,7 +137,7 @@ export default function MyClaimsPage() {
       const updated = await confirmClaim(confirmingClaim.id);
       setClaims((prev) => prev.map((claim) => (claim.id === updated.id ? updated : claim)));
       setConfirmingClaim(null);
-      showSnackbar('Claim confirmed', 'success');
+      showSnackbar('Confirmed. Run the risk check again so this flag can clear.', 'success');
     } catch (error) {
       showSnackbar(extractRequestError(error, 'Could not confirm the claim'), 'error');
     } finally {

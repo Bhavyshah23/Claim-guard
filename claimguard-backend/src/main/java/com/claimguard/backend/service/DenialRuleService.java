@@ -2,11 +2,14 @@ package com.claimguard.backend.service;
 
 import com.claimguard.backend.dto.DenialRuleRequest;
 import com.claimguard.backend.dto.DenialRuleResponse;
+import com.claimguard.backend.entity.Clinic;
 import com.claimguard.backend.entity.DenialRule;
 import com.claimguard.backend.entity.RuleConditionType;
 import com.claimguard.backend.exception.ResourceNotFoundException;
 import com.claimguard.backend.repository.ClaimRiskFlagRepository;
+import com.claimguard.backend.repository.ClinicRepository;
 import com.claimguard.backend.repository.DenialRuleRepository;
+import com.claimguard.backend.security.CurrentUserProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,17 +27,25 @@ public class DenialRuleService {
 
     private final DenialRuleRepository denialRuleRepository;
     private final ClaimRiskFlagRepository claimRiskFlagRepository;
+    private final ClinicRepository clinicRepository;
+    private final CurrentUserProvider currentUserProvider;
     private final ObjectMapper objectMapper;
 
     public List<DenialRuleResponse> getAllRules() {
-        return denialRuleRepository.findAll().stream().map(this::toResponse).toList();
+        Long clinicId = currentUserProvider.getCurrentClinicId();
+        return denialRuleRepository.findByClinicId(clinicId).stream().map(this::toResponse).toList();
     }
 
     @Transactional
     public DenialRuleResponse createRule(DenialRuleRequest request) {
         validateCondition(request.getConditionType(), request.getConditionLogic());
 
+        Long clinicId = currentUserProvider.getCurrentClinicId();
+        Clinic clinic = clinicRepository.findById(clinicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Clinic not found"));
+
         DenialRule rule = DenialRule.builder()
+                .clinic(clinic)
                 .ruleName(request.getRuleName().trim())
                 .conditionType(request.getConditionType())
                 .conditionLogic(request.getConditionLogic().trim())
@@ -86,8 +97,13 @@ public class DenialRuleService {
     }
 
     private DenialRule getRule(Long id) {
-        return denialRuleRepository.findById(id)
+        Long clinicId = currentUserProvider.getCurrentClinicId();
+        DenialRule rule = denialRuleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rule not found with id: " + id));
+        if (rule.getClinic() == null || !rule.getClinic().getId().equals(clinicId)) {
+            throw new ResourceNotFoundException("Rule not found with id: " + id);
+        }
+        return rule;
     }
 
     private void validateCondition(RuleConditionType type, String conditionLogic) {
