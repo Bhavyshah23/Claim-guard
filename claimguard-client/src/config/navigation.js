@@ -4,6 +4,7 @@ import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import RuleOutlined from '@mui/icons-material/RuleOutlined';
 import AssignmentIndOutlined from '@mui/icons-material/AssignmentIndOutlined';
 import AddCircleOutlined from '@mui/icons-material/AddCircleOutlined';
+import ViewKanbanOutlined from '@mui/icons-material/ViewKanbanOutlined';
 import PeopleOutlined from '@mui/icons-material/PeopleOutlined';
 import AccountBalanceOutlined from '@mui/icons-material/AccountBalanceOutlined';
 import LocalHospitalOutlined from '@mui/icons-material/LocalHospitalOutlined';
@@ -24,6 +25,7 @@ export const NAV_ITEMS = {
     { label: 'All Claims', path: '/doctor/claims', icon: AssignmentOutlined },
   ],
   BILLING_STAFF: [
+    { label: 'Queue', path: '/billing', end: true, icon: ViewKanbanOutlined },
     { label: 'New Claim', path: '/billing/new-claim', icon: AddCircleOutlined },
     { label: 'All Claims', path: '/billing/claims', icon: AssignmentOutlined },
     { label: 'Screening Rules', path: '/billing/rules', icon: RuleOutlined },

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Box,
@@ -255,6 +256,7 @@ function SubmittedCard({ claim, onReset }) {
 }
 
 export default function NewClaimPage() {
+  const navigate = useNavigate();
   const [lookups, setLookups] = useState(INITIAL_LOOKUPS);
   const [lookupErrors, setLookupErrors] = useState({});
   const [lookupLoading, setLookupLoading] = useState(true);
@@ -344,11 +346,7 @@ export default function NewClaimPage() {
     setSubmitting(true);
     try {
       const created = await createClaim(payload);
-      setClaim(created);
-      setCheckResult(null);
-      setDetailsExpanded(false);
-      showSnackbar('Claim created successfully', 'success');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      navigate(`/billing/claims/${created.id}`);
     } catch (error) {
       showSnackbar(extractRequestError(error), 'error');
     } finally {

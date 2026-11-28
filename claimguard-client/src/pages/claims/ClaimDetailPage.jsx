@@ -44,7 +44,7 @@ import {
 import { extractRequestError } from '../../utils/requestErrors';
 import { formatDate } from '../../utils/dates';
 import { claimStatusMeta, EDITABLE_STATUSES } from '../../utils/claimStatus';
-import { riskScoreColor, SEVERITY_META } from '../../utils/severity';
+import { SEVERITY_META } from '../../utils/severity';
 import ClaimDetailsForm from '../billing/ClaimDetailsForm';
 
 const ROLE_BASE_PATH = {
@@ -347,7 +347,6 @@ export default function ClaimDetailPage() {
   }
 
   const status = claimStatusMeta(claim.status);
-  const riskColor = riskScoreColor(claim.riskScore ?? 0);
   const flags = claim.riskFlags ?? [];
 
   const actionButtons = (
@@ -474,134 +473,152 @@ export default function ClaimDetailPage() {
       <PageHeader
         title={`Claim #${claim.id}`}
         subtitle={`${claim.patientName} · ${claim.insurerName}`}
-        action={actionButtons}
       />
 
-      <Stack spacing={2.5}>
+      <Stack spacing={2}>
+        <Box
+          sx={{
+            p: { xs: 2.5, sm: 3 },
+            borderRadius: 2,
+            bgcolor: status.color,
+            color: '#FFFFFF',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 2,
+            flexWrap: 'wrap',
+          }}
+        >
+          <Box>
+            <Typography sx={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.75)' }}>
+              {status.label}
+            </Typography>
+            <Typography data-tabular="true" sx={{ fontSize: { xs: 42, sm: 56 }, fontWeight: 800, lineHeight: 1, mt: 0.5 }}>
+              {claim.riskScore ?? 0}
+              <Typography component="span" sx={{ fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.75)' }}>
+                {' '}
+                / 100 risk
+              </Typography>
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              '& .MuiButton-outlined': {
+                color: '#FFFFFF',
+                borderColor: 'rgba(255,255,255,0.55)',
+              },
+              '& .MuiButton-contained': { bgcolor: '#FFFFFF', color: status.color },
+            }}
+          >
+            {actionButtons}
+          </Box>
+        </Box>
+
         {role === 'ADMIN' && editable && (
           <Alert severity="info">
             Billing staff edit and submit this claim. You can run a check here, and record the payer outcome after it is submitted.
           </Alert>
         )}
-        <Card sx={{ p: { xs: 2.5, sm: 3.5 } }}>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="flex-start"
-            flexWrap="wrap"
-            gap={1.5}
-          >
-            <Box>
+
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', lg: '1.4fr 0.8fr' },
+            gap: 2,
+            alignItems: 'start',
+          }}
+        >
+          <Stack spacing={2}>
+            <Card sx={{ p: { xs: 2.5, sm: 3.5 } }}>
               <Typography sx={{ fontSize: 18, fontWeight: 700 }}>{claim.patientName}</Typography>
               <Typography sx={{ fontSize: 13.5, color: 'text.secondary', mt: 0.25 }}>
                 Date of service {formatDate(claim.dateOfService)}
               </Typography>
-            </Box>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Chip
-                label={status.label}
-                sx={{ bgcolor: status.background, color: status.color, fontWeight: 700 }}
-              />
-              <Chip
-                label={`Risk ${claim.riskScore ?? 0}/100`}
+              <Divider sx={{ my: 2.5 }} />
+              <Box
                 sx={{
-                  bgcolor: 'background.default',
-                  color: riskColor,
-                  border: '1px solid',
-                  borderColor: 'divider',
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                  gap: 2,
                 }}
-              />
-            </Stack>
-          </Stack>
-          <Divider sx={{ my: 2.5 }} />
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
-              gapX: 4,
-              gapY: 2,
-            }}
-          >
-            <DetailItem label="Insurer" value={claim.insurerName} />
-            <DetailItem label="Policy number" value={claim.policyNumber} />
-            <DetailItem label="Pre-authorization" value={claim.preAuthNumber || 'Not provided'} />
-            <DetailItem label="Created by" value={claim.createdByUsername} />
-            <DetailItem label="Created" value={formatDate(claim.createdAt)} />
-            <DetailItem label="Last updated" value={formatDate(claim.updatedAt)} />
-          </Box>
-
-          <Divider sx={{ my: 2.5 }} />
-          <SectionLabel>Assigned doctors</SectionLabel>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            {(claim.doctors ?? []).map((doctor) => (
-              <Chip
-                key={doctor.doctorId}
-                label={`${doctor.doctorUsername}${doctor.confirmed ? ' · confirmed' : ' · pending'}`}
-                sx={{
-                  bgcolor: doctor.confirmed ? '#F0FDF4' : '#F1F5F9',
-                  color: doctor.confirmed ? '#16A34A' : '#64748B',
-                  fontWeight: 600,
-                }}
-              />
-            ))}
-          </Stack>
-        </Card>
-
-        <Card sx={{ p: { xs: 2.5, sm: 3.5 } }}>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-              gap: 3,
-            }}
-          >
-            <Box>
-              <SectionLabel>Diagnosis codes</SectionLabel>
-              {(claim.diagnosisCodes ?? []).length === 0 ? (
-                <Typography sx={{ fontSize: 13.5, color: 'text.secondary' }}>None recorded</Typography>
-              ) : (
-                claim.diagnosisCodes.map((item) => (
-                  <CodeRow
-                    key={item.id}
-                    code={item.code}
-                    description={item.description}
-                    category={item.category}
+              >
+                <DetailItem label="Insurer" value={claim.insurerName} />
+                <DetailItem label="Policy number" value={claim.policyNumber} />
+                <DetailItem label="Pre-authorization" value={claim.preAuthNumber || 'Not provided'} />
+                <DetailItem label="Created by" value={claim.createdByUsername} />
+                <DetailItem label="Created" value={formatDate(claim.createdAt)} />
+                <DetailItem label="Last updated" value={formatDate(claim.updatedAt)} />
+              </Box>
+              <Divider sx={{ my: 2.5 }} />
+              <SectionLabel>Assigned doctors</SectionLabel>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {(claim.doctors ?? []).map((doctor) => (
+                  <Chip
+                    key={doctor.doctorId}
+                    label={`${doctor.doctorUsername}${doctor.confirmed ? ' · confirmed' : ' · pending'}`}
+                    sx={{
+                      bgcolor: doctor.confirmed ? '#F0FDF4' : '#F1F5F9',
+                      color: doctor.confirmed ? '#16A34A' : '#64748B',
+                      fontWeight: 600,
+                    }}
                   />
-                ))
-              )}
-            </Box>
-            <Box>
-              <SectionLabel>Procedure codes</SectionLabel>
-              {(claim.procedureCodes ?? []).length === 0 ? (
-                <Typography sx={{ fontSize: 13.5, color: 'text.secondary' }}>None recorded</Typography>
-              ) : (
-                claim.procedureCodes.map((item) => (
-                  <CodeRow
-                    key={item.procedureCodeId}
-                    code={item.code}
-                    description={item.description}
-                    modifier={item.modifier}
-                  />
-                ))
-              )}
-            </Box>
-          </Box>
-        </Card>
+                ))}
+              </Stack>
+            </Card>
 
-        <Card sx={{ p: { xs: 2.5, sm: 3.5 } }}>
-          <SectionLabel>Risk flags</SectionLabel>
-          {flags.length === 0 ? (
-            <Alert severity="success" icon={<CheckCircleOutlined />}>
-              No risk flags on this claim.
-            </Alert>
-          ) : (
-            <Stack spacing={1.5}>
-              {flags.map((flag) => (
-                <RiskFlagRow key={flag.id} flag={flag} />
-              ))}
-            </Stack>
-          )}
-        </Card>
+            <Card sx={{ p: { xs: 2.5, sm: 3.5 } }}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+                <Box>
+                  <SectionLabel>Diagnosis codes</SectionLabel>
+                  {(claim.diagnosisCodes ?? []).length === 0 ? (
+                    <Typography sx={{ fontSize: 13.5, color: 'text.secondary' }}>None recorded</Typography>
+                  ) : (
+                    claim.diagnosisCodes.map((item) => (
+                      <CodeRow
+                        key={item.id}
+                        code={item.code}
+                        description={item.description}
+                        category={item.category}
+                      />
+                    ))
+                  )}
+                </Box>
+                <Box>
+                  <SectionLabel>Procedure codes</SectionLabel>
+                  {(claim.procedureCodes ?? []).length === 0 ? (
+                    <Typography sx={{ fontSize: 13.5, color: 'text.secondary' }}>None recorded</Typography>
+                  ) : (
+                    claim.procedureCodes.map((item) => (
+                      <CodeRow
+                        key={item.procedureCodeId}
+                        code={item.code}
+                        description={item.description}
+                        modifier={item.modifier}
+                      />
+                    ))
+                  )}
+                </Box>
+              </Box>
+            </Card>
+          </Stack>
+
+          <Card sx={{ p: { xs: 2.5, sm: 3.5 } }}>
+            <SectionLabel>Risk flags</SectionLabel>
+            {flags.length === 0 ? (
+              <Alert severity="success" icon={<CheckCircleOutlined />}>
+                {claim.status === 'CHECKED_CLEAN'
+                  ? 'Ready to submit. No screening issues remain.'
+                  : 'No risk flags on this claim.'}
+              </Alert>
+            ) : (
+              <Stack spacing={1.5}>
+                {flags.map((flag) => (
+                  <RiskFlagRow key={flag.id} flag={flag} />
+                ))}
+              </Stack>
+            )}
+          </Card>
+        </Box>
       </Stack>
 
       <Dialog open={Boolean(outcome)} onClose={() => setOutcome(null)} maxWidth="xs" fullWidth>

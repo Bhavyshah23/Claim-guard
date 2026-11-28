@@ -528,6 +528,7 @@ export default function RuleConfigurationPage({ readOnly = false }) {
       ) : null}
 
       {!readOnly && (
+      <>
       <Drawer
         anchor="right"
         open={drawerOpen}
@@ -727,6 +728,7 @@ export default function RuleConfigurationPage({ readOnly = false }) {
           </Button>
         </DialogActions>
       </Dialog>
+      </>
       )}
 
       <Snackbar

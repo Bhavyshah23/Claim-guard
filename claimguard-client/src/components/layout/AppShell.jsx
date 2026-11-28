@@ -79,7 +79,11 @@ function SidebarContent({ navItems, roleMeta, user, initial, onNavigate, onLogou
         <List sx={{ p: 0 }}>
           {navItems.map((item) => (
             <ListItem key={item.label} disablePadding sx={{ mb: 0.5 }}>
-              <NavLink to={item.path} style={{ textDecoration: 'none', display: 'block', width: '100%' }}>
+              <NavLink
+                to={item.path}
+                end={item.end}
+                style={{ textDecoration: 'none', display: 'block', width: '100%' }}
+              >
                 {({ isActive }) => (
                   <ListItemButton
                     onClick={onNavigate}

@@ -98,46 +98,6 @@ function FlagTooltip({ active, payload }) {
   );
 }
 
-function StatCard({ label, value, icon: Icon, accent, bg }) {
-  return (
-    <Card
-      sx={{
-        p: 2.5,
-        position: 'relative',
-        transition: 'transform 200ms ease, box-shadow 200ms ease',
-        '&:hover': {
-          transform: 'translateY(-2px)',
-          boxShadow: '0 10px 24px rgba(15, 23, 42, 0.10)',
-        },
-      }}
-    >
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 16,
-          right: 16,
-          width: 40,
-          height: 40,
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: bg,
-          color: accent,
-        }}
-      >
-        <Icon sx={{ fontSize: 20 }} />
-      </Box>
-      <Typography data-tabular="true" sx={{ fontSize: 32, fontWeight: 700, lineHeight: 1.15 }}>
-        {value}
-      </Typography>
-      <Typography sx={{ mt: 0.5, fontSize: 13.5, fontWeight: 600, color: 'text.secondary' }}>
-        {label}
-      </Typography>
-    </Card>
-  );
-}
-
 function RiskScoreCell({ score }) {
   if (score === null || score === undefined) {
     return <Typography sx={{ color: 'text.secondary', fontSize: 13.5 }}>—</Typography>;
@@ -285,6 +245,13 @@ export default function DashboardPage() {
       clean: byStatus.CHECKED_CLEAN ?? 0,
       flagged: byStatus.CHECKED_FLAGGED ?? 0,
       draft: byStatus.DRAFT ?? 0,
+      submitted: byStatus.SUBMITTED ?? 0,
+      approved: byStatus.APPROVED ?? 0,
+      waiting: claims.filter(
+        (claim) =>
+          ['DRAFT', 'CHECKED_CLEAN', 'CHECKED_FLAGGED'].includes(claim.status) &&
+          (claim.doctors ?? []).some((doctor) => !doctor.confirmed)
+      ).length,
       statusData,
       flagData,
       recent: [...claims]
@@ -302,13 +269,6 @@ export default function DashboardPage() {
       .then(setClaims)
       .catch(setLoadError)
       .finally(() => setLoading(false));
-  };
-
-  const summaryValues = {
-    total: stats.total,
-    clean: stats.clean,
-    flagged: stats.flagged,
-    draft: stats.draft,
   };
 
   if (loading) {
@@ -379,22 +339,71 @@ export default function DashboardPage() {
     <>
       <PageHeader title="Dashboard" subtitle="Overview of your clinic's claim activity" />
 
-      <Stack spacing={2.5}>
-        <Grid container spacing={2.5}>
-          {SUMMARY.map((item) => (
-            <Grid item xs={12} sm={6} lg={3} key={item.key}>
-              <StatCard
-                label={item.label}
-                value={summaryValues[item.key]}
-                icon={item.icon}
-                accent={item.accent}
-                bg={item.bg}
-              />
-            </Grid>
-          ))}
-        </Grid>
+      <Box sx={{ display: 'grid', gap: 2.5 }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gap: 2,
+          gridTemplateColumns: { xs: '1fr', lg: '1.6fr 1fr 1fr' },
+          gridTemplateAreas: {
+            xs: '"hero" "flagged" "waiting" "submitted" "approved"',
+            lg: '"hero flagged waiting" "hero submitted approved"',
+          },
+        }}
+      >
+        <Card
+          sx={{
+            gridArea: 'hero',
+            p: { xs: 3, sm: 4 },
+            minHeight: { lg: 280 },
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            bgcolor: '#0F766E',
+            color: '#FFFFFF',
+            border: 'none',
+          }}
+        >
+          <Typography sx={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.75)' }}>
+            Caught before submission
+          </Typography>
+          <Box>
+            <Typography data-tabular="true" sx={{ fontSize: { xs: 64, sm: 84 }, fontWeight: 800, lineHeight: 0.9 }}>
+              {stats.flagged}
+            </Typography>
+            <Typography sx={{ mt: 1.5, fontSize: 16, maxWidth: 360, color: 'rgba(255,255,255,0.88)' }}>
+              Flagged claims your clinic can still fix before they go to a payer.
+            </Typography>
+          </Box>
+        </Card>
+        {[
+          { key: 'flagged', label: 'Flagged', value: stats.flagged, color: '#DC2626', bg: '#FEF2F2' },
+          { key: 'waiting', label: 'Waiting for doctor', value: stats.waiting, color: '#D97706', bg: '#FFFBEB' },
+          { key: 'submitted', label: 'Submitted', value: stats.submitted, color: '#2563EB', bg: '#EFF6FF' },
+          { key: 'approved', label: 'Approved', value: stats.approved, color: '#16A34A', bg: '#F0FDF4' },
+        ].map((item) => (
+          <Card
+            key={item.key}
+            sx={{
+              gridArea: item.key,
+              p: 2.5,
+              bgcolor: item.bg,
+              borderColor: 'transparent',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              minHeight: 132,
+            }}
+          >
+            <Typography sx={{ fontSize: 13, fontWeight: 700, color: item.color }}>{item.label}</Typography>
+            <Typography data-tabular="true" sx={{ fontSize: 40, fontWeight: 800, color: item.color, lineHeight: 1 }}>
+              {item.value}
+            </Typography>
+          </Card>
+        ))}
+      </Box>
 
-        <Grid container spacing={2.5}>
+      <Grid container spacing={2.5}>
           <Grid item xs={12} lg={6}>
             <Card sx={{ p: { xs: 2.5, sm: 3 } }}>
               <Typography sx={{ fontSize: 16, fontWeight: 700 }}>Claims by Status</Typography>
@@ -523,45 +532,6 @@ export default function DashboardPage() {
           </Grid>
         </Grid>
 
-        <Card
-          sx={{
-            p: { xs: 3, sm: 4 },
-            display: 'flex',
-            alignItems: 'center',
-            gap: 3,
-            flexWrap: 'wrap',
-            bgcolor: 'rgba(15, 118, 110, 0.07)',
-            borderColor: 'rgba(13, 148, 136, 0.35)',
-            borderLeft: '4px solid #0F766E',
-          }}
-        >
-          <Box
-            sx={{
-              width: 64,
-              height: 64,
-              borderRadius: '50%',
-              bgcolor: '#0F766E',
-              color: '#FFFFFF',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              boxShadow: '0 6px 16px rgba(15, 118, 110, 0.35)',
-            }}
-          >
-            <ShieldOutlined sx={{ fontSize: 34 }} />
-          </Box>
-          <Box sx={{ flex: 1, minWidth: 240 }}>
-            <Typography data-tabular="true" sx={{ fontSize: { xs: 26, sm: 34 }, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-              {stats.flagged} claim{stats.flagged === 1 ? '' : 's'} caught before submission
-            </Typography>
-            <Typography sx={{ mt: 1, fontSize: 14.5, color: 'text.secondary', maxWidth: 640 }}>
-              ClaimGuard flagged {stats.flagged === 1 ? 'this claim' : 'these claims'} for review,
-              helping avoid potential denials and revenue loss.
-            </Typography>
-          </Box>
-        </Card>
-
         <Card sx={{ overflow: 'hidden' }}>
           <Box
             sx={{
@@ -637,7 +607,7 @@ export default function DashboardPage() {
             </Table>
           </TableContainer>
         </Card>
-      </Stack>
+      </Box>
     </>
   );
 }

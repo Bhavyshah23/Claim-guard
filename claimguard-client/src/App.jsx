@@ -10,6 +10,7 @@ import ClaimsListPage from './pages/claims/ClaimsListPage';
 import ClaimDetailPage from './pages/claims/ClaimDetailPage';
 import RuleConfigurationPage from './pages/admin/RuleConfigurationPage';
 import NewClaimPage from './pages/billing/NewClaimPage';
+import BillingQueuePage from './pages/billing/BillingQueuePage';
 import MyClaimsPage from './pages/doctor/MyClaimsPage';
 import StaffManagementPage from './pages/admin/StaffManagementPage';
 import InsurerManagementPage from './pages/admin/InsurerManagementPage';
@@ -90,7 +91,7 @@ export default function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="new-claim" replace />} />
+          <Route index element={<BillingQueuePage />} />
           <Route path="new-claim" element={<NewClaimPage />} />
           <Route path="claims" element={<ClaimsListPage />} />
           <Route path="claims/:id" element={<ClaimDetailPage />} />
